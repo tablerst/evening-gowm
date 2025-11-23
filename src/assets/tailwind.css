@@ -4,18 +4,22 @@
 
 @layer base {
   :root {
-    --void-black: #030305;
-    --text-hero: #eceffe;
-    --text-body: #c9d2e5;
-    --text-muted: #8b94aa;
-    --text-caption: #6b7280;
-    --champagne-gold: #d4af37;
-    --royal-purple: #4b0082;
-    --midnight-blue: #191970;
+    --bg-obsidian: #050505;
+    --bg-surface: #08140f;
+    --brand-emerald: #043d2c;
+    --brand-emerald-hover: #056e41;
+    --text-champagne: #e8d6b3;
+    --text-platinum: #c0c0c0;
+    --text-ash: #9aa3a1;
+    --text-cinder: #5e645f;
+    --accent-gold: #d4af37;
+    --accent-silver: #e0e0e0;
+    --glass-blur: blur(20px);
+    --velvet-gradient: radial-gradient(circle at 35% 35%, rgba(4, 61, 44, 0.45), rgba(5, 5, 5, 0.95));
   }
 
   body {
-    @apply bg-[var(--void-black)] text-[var(--text-body)] font-sans overflow-x-hidden antialiased;
+    @apply bg-obsidian text-platinum font-sans overflow-x-hidden antialiased;
   }
 
   body.has-custom-cursor,
@@ -28,7 +32,7 @@
   }
 
   ::-webkit-scrollbar-track {
-    background: var(--void-black);
+    background: var(--bg-obsidian);
   }
 
   ::-webkit-scrollbar-thumb {
@@ -37,12 +41,12 @@
   }
 
   ::-webkit-scrollbar-thumb:hover {
-    background: var(--champagne-gold);
+    background: var(--accent-gold);
   }
 
   ::selection {
-    background-color: var(--champagne-gold);
-    color: #000;
+    background-color: var(--accent-gold);
+    color: var(--bg-obsidian);
   }
 }
 
@@ -55,16 +59,16 @@
     line-height: 0.9;
     background: linear-gradient(
       180deg,
-      #ffffff 0%,
-      #e2e8f0 25%,
-      #a5b4fc 50%,
-      rgba(75, 0, 130, 0.8) 75%,
+      #fff7e3 0%,
+      #f2e4c7 25%,
+      #d1b78a 55%,
+      rgba(4, 61, 44, 0.9) 80%,
       rgba(3, 3, 5, 0) 100%
     );
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
-    filter: drop-shadow(0 0 8px rgba(165, 180, 252, 0.2));
+    filter: drop-shadow(0 0 14px rgba(4, 61, 44, 0.35));
     opacity: 0;
   }
 
@@ -73,37 +77,38 @@
     font-style: italic;
   }
 
-  .text-hero {
-    color: var(--text-hero);
+  .text-hero,
+  .text-hero-sub,
+  .text-champagne {
+    color: var(--text-champagne);
   }
 
-  .text-hero-sub {
-    color: var(--text-hero);
+  .text-body-copy,
+  .text-platinum {
+    color: var(--text-platinum);
   }
 
-  .text-body-copy {
-    color: var(--text-body);
+  .text-muted,
+  .text-ash {
+    color: var(--text-ash);
   }
 
-  .text-muted {
-    color: var(--text-muted);
-  }
-
-  .text-caption {
-    color: var(--text-caption);
+  .text-caption,
+  .text-cinder {
+    color: var(--text-cinder);
   }
 
   .eyebrow {
     font-size: 10px;
     letter-spacing: 0.35em;
     text-transform: uppercase;
-    color: var(--text-muted);
+    color: var(--text-ash);
   }
 
   .cursor-dot {
     width: 6px;
     height: 6px;
-    background-color: var(--champagne-gold);
+    background-color: var(--accent-gold);
     position: fixed;
     top: 0;
     left: 0;
@@ -111,7 +116,7 @@
     border-radius: 50%;
     z-index: 9999;
     pointer-events: none;
-    box-shadow: 0 0 10px var(--champagne-gold);
+    box-shadow: 0 0 10px var(--accent-gold);
     opacity: 0;
     transition: opacity 0.2s ease;
   }
@@ -119,8 +124,8 @@
   .cursor-outline {
     width: 40px;
     height: 40px;
-    border: 0.5px solid rgba(255, 255, 255, 0.2);
-    background: radial-gradient(circle, rgba(75, 0, 130, 0.15) 0%, rgba(0, 0, 0, 0) 70%);
+    border: 0.5px solid rgba(232, 214, 179, 0.25);
+    background: radial-gradient(circle, rgba(4, 61, 44, 0.18) 0%, rgba(0, 0, 0, 0) 70%);
     position: fixed;
     top: 0;
     left: 0;
@@ -135,10 +140,10 @@
   }
 
   .nav-glass {
-    background: rgba(3, 3, 5, 0.85);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border-bottom: 1px solid rgba(25, 25, 112, 0.3);
+    background: rgba(5, 5, 5, 0.7);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    border-bottom: 1px solid rgba(232, 214, 179, 0.12);
   }
 
   .image-wrapper {
@@ -157,13 +162,13 @@
   }
 
   .gold-line {
-    background: linear-gradient(to right, transparent, var(--champagne-gold), transparent);
+    background: linear-gradient(to right, transparent, var(--accent-gold), transparent);
     height: 1px;
     opacity: 0.6;
   }
 
   .gold-line-vertical {
-    background: linear-gradient(to bottom, transparent, var(--champagne-gold), transparent);
+    background: linear-gradient(to bottom, transparent, var(--accent-gold), transparent);
     width: 1px;
     opacity: 0.6;
   }

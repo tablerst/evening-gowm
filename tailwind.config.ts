@@ -5,25 +5,33 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        'void-black': '#030305',
-        'text-hero': '#ECEFFE',
-        'text-body': '#C9D2E5',
-        'text-muted': '#8B94AA',
-        'text-caption': '#6B7280',
-        'champagne-gold': '#D4AF37',
-        'royal-purple': '#4B0082',
-        'midnight-blue': '#191970',
+        obsidian: '#050505',
+        surface: '#08140F',
+        emerald: '#043D2C',
+        'emerald-glow': '#056E41',
+        champagne: '#E8D6B3',
+        platinum: '#C0C0C0',
+        smoke: '#9AA3A1',
+        cinder: '#5E645F',
+        'accent-gold': '#D4AF37',
+        'accent-silver': '#E0E0E0',
+        'velvet-shadow': '#03110C',
       },
       fontFamily: {
-        sans: ['Montserrat', 'sans-serif'],
-        serif: ['Cinzel', 'serif'],
-        display: ['Playfair Display', 'serif'],
+        sans: ['Source Sans 3', 'Montserrat', 'sans-serif'],
+        serif: ['Cormorant Garamond', 'Playfair Display', 'serif'],
+        display: ['Playfair Display', 'Cinzel', 'serif'],
       },
       letterSpacing: {
         extra: '0.35em',
       },
       transitionTimingFunction: {
         'expo-out': 'cubic-bezier(0.19, 1, 0.22, 1)',
+        'silk-flow': 'cubic-bezier(0.6, 0, 0.4, 1)',
+      },
+      backgroundImage: {
+        'velvet-radial':
+          'radial-gradient(circle at 30% 50%, rgba(5, 20, 15, 0.55), rgba(5, 5, 5, 0.95))',
       },
     },
   },

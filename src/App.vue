@@ -46,8 +46,8 @@ const targetConfig: Omit<RibbonRuntimeConfig, 'segments' | 'width' | 'length'> =
     twistSpeed: 0.1,
     twistAmplitude: 1.5,
     flowFrequency: 0.8,
-    baseColor: new THREE.Color(0x151520),
-    glowColor: new THREE.Color(0x5533cc),
+    baseColor: new THREE.Color(0x04140f),
+    glowColor: new THREE.Color(0x0b5d3a),
 }
 
 const config: RibbonRuntimeConfig = {
@@ -58,8 +58,8 @@ const config: RibbonRuntimeConfig = {
     twistSpeed: 0.1,
     twistAmplitude: 1.5,
     flowFrequency: 0.8,
-    baseColor: new THREE.Color(0x151520),
-    glowColor: new THREE.Color(0x5533cc),
+    baseColor: new THREE.Color(0x04140f),
+    glowColor: new THREE.Color(0x0b5d3a),
 }
 
 const initCursor = () => {
@@ -69,6 +69,12 @@ const initCursor = () => {
     if (!cursorDotRef || !cursorOutlineRef) {
         return
     }
+
+    const styles = getComputedStyle(document.documentElement)
+    const accentGold = styles.getPropertyValue('--accent-gold').trim() || '#D4AF37'
+    const emeraldOverlay = 'rgba(5, 110, 65, 0.12)'
+    const emeraldIdle = 'rgba(4, 61, 44, 0.18)'
+    const idleBorder = 'rgba(232, 214, 179, 0.25)'
 
     document.body.classList.add('has-custom-cursor')
     cursorDotRef.style.opacity = '1'
@@ -97,15 +103,15 @@ const initCursor = () => {
         const onEnter = () => {
             cursorOutlineRef!.style.width = '50px'
             cursorOutlineRef!.style.height = '50px'
-            cursorOutlineRef!.style.borderColor = '#D4AF37'
-            cursorOutlineRef!.style.background = 'rgba(75, 0, 130, 0.1)'
+            cursorOutlineRef!.style.borderColor = accentGold
+            cursorOutlineRef!.style.background = emeraldOverlay
         }
 
         const onLeave = () => {
             cursorOutlineRef!.style.width = '40px'
             cursorOutlineRef!.style.height = '40px'
-            cursorOutlineRef!.style.borderColor = 'rgba(255, 255, 255, 0.2)'
-            cursorOutlineRef!.style.background = 'rgba(75, 0, 130, 0.15)'
+            cursorOutlineRef!.style.borderColor = idleBorder
+            cursorOutlineRef!.style.background = emeraldIdle
         }
 
         element.addEventListener('mouseenter', onEnter)
@@ -287,16 +293,16 @@ const initSilkCanvas = () => {
     scene.add(ribbonMesh)
 
     // 模拟月光环境
-    const ambientLight = new THREE.AmbientLight(0x8899ff, 1.2)
+    const ambientLight = new THREE.AmbientLight(0x1c392d, 1.1)
     scene.add(ambientLight)
 
     // 主轮廓光
-    const mainLight = new THREE.DirectionalLight(0xffffff, 3)
+    const mainLight = new THREE.DirectionalLight(0xf6e7c8, 2.4)
     mainLight.position.set(5, 5, 5)
     scene.add(mainLight)
 
     // 底部补光，增加层次
-    const fillLight = new THREE.DirectionalLight(0x4b0082, 1.5)
+    const fillLight = new THREE.DirectionalLight(0x0a3225, 1.3)
     fillLight.position.set(-5, -5, 0)
     scene.add(fillLight)
 
@@ -460,37 +466,37 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-    <div class="min-h-screen bg-[var(--void-black)] text-[var(--text-body)]">
+    <div class="min-h-screen bg-obsidian text-platinum">
         <div class="cursor-dot" aria-hidden="true"></div>
         <div class="cursor-outline" aria-hidden="true"></div>
 
         <nav class="nav-glass fixed top-0 w-full z-50 px-6 md:px-8 py-4 flex justify-between items-center">
             <div
-                class="text-lg md:text-xl font-serif text-white tracking-[0.2em] font-bold flex items-center gap-2 nav-link">
-                <span class="text-[#D4AF37]">✦</span>
+                class="text-lg md:text-xl font-serif text-champagne tracking-[0.2em] font-bold flex items-center gap-2 nav-link">
+                <span class="text-accent-gold">✦</span>
                 NOIR & ÉCLAT
             </div>
             <div class="hidden md:flex space-x-12 text-xs tracking-[0.2em] text-muted">
-                <a href="#" class="hover:text-white transition-colors duration-300 nav-link">COLLECTIONS</a>
-                <a href="#" class="hover:text-white transition-colors duration-300 nav-link">RUNWAY</a>
-                <a href="#" class="hover:text-white transition-colors duration-300 nav-link">ATELIER</a>
-                <a href="#" class="hover:text-white transition-colors duration-300 nav-link">CONTACT</a>
+                <a href="#" class="hover:text-champagne transition-colors duration-300 nav-link">COLLECTIONS</a>
+                <a href="#" class="hover:text-champagne transition-colors duration-300 nav-link">RUNWAY</a>
+                <a href="#" class="hover:text-champagne transition-colors duration-300 nav-link">ATELIER</a>
+                <a href="#" class="hover:text-champagne transition-colors duration-300 nav-link">CONTACT</a>
             </div>
             <button
-                class="border border-[#D4AF37] text-[#D4AF37] px-6 md:px-8 py-2 text-[10px] tracking-[0.3em] uppercase hover:bg-[#D4AF37] hover:text-black transition-all duration-500 nav-link">
+                class="border border-accent-gold text-accent-gold px-6 md:px-8 py-2 text-[10px] tracking-[0.3em] uppercase hover:bg-accent-gold hover:text-obsidian transition-all duration-500 nav-link">
                 Private View
             </button>
         </nav>
 
-        <header class="relative w-full h-screen flex items-center justify-center overflow-hidden bg-black">
+        <header class="relative w-full h-screen flex items-center justify-center overflow-hidden bg-surface">
             <div class="absolute inset-0 w-full h-[120%] -top-[10%]" id="hero-bg">
                 <div ref="silkContainer" aria-hidden="true" class="absolute inset-0 pointer-events-none overflow-hidden"
                     id="silk-canvas"></div>
                 <div
-                    class="absolute inset-0 bg-gradient-to-br from-[rgba(25,25,112,0.2)] via-transparent to-[rgba(75,0,130,0.15)] pointer-events-none backdrop-blur-[2px]">
+                    class="absolute inset-0 bg-gradient-to-br from-[rgba(4,61,44,0.35)] via-transparent to-[rgba(5,5,5,0.5)] pointer-events-none backdrop-blur-[2px]">
                 </div>
                 <div
-                    class="absolute inset-0 bg-gradient-to-t from-[var(--void-black)] via-transparent to-black/10 pointer-events-none">
+                    class="absolute inset-0 bg-gradient-to-t from-[var(--bg-obsidian)] via-transparent to-obsidian/10 pointer-events-none">
                 </div>
             </div>
 
@@ -500,7 +506,7 @@ onBeforeUnmount(() => {
                 <div class="pointer-events-auto md:ml-[5%] lg:ml-[10%]">
                     <p
                         class="italic-serif text-hero-sub text-base md:text-xl mb-6 tracking-[0.3em] opacity-0 hero-sub text-left">
-                        The <span class="text-[#D4AF37]">2025</span> Midnight Series
+                        The <span class="text-accent-gold">2025</span> Midnight Series
                     </p>
                     <h1 class="flex flex-col items-start gap-0 scale-y-110">
                         <span
@@ -511,8 +517,9 @@ onBeforeUnmount(() => {
                             id="hero-text-2">DREAMS</span>
                     </h1>
                     <div class="mt-16 opacity-0 hero-cta flex items-center gap-6 ml-2">
-                        <div class="h-[1px] w-16 bg-gradient-to-r from-[#D4AF37] to-transparent opacity-50"></div>
-                        <span class="eyebrow nav-link hover:text-white transition-colors cursor-pointer">Discover the
+                        <div class="h-[1px] w-16 bg-gradient-to-r from-accent-gold to-transparent opacity-50"></div>
+                        <span class="eyebrow nav-link hover:text-champagne transition-colors cursor-pointer">Discover
+                            the
                             Essence</span>
                     </div>
                 </div>
@@ -529,16 +536,16 @@ onBeforeUnmount(() => {
             </div>
         </header>
 
-        <section class="relative w-full min-h-screen py-24 md:py-32 px-6 md:px-20 bg-[var(--void-black)]">
+        <section class="relative w-full min-h-screen py-24 md:py-32 px-6 md:px-20 bg-obsidian">
             <div class="mb-20 md:mb-32 flex flex-col md:flex-row items-start md:items-end justify-between gap-8">
                 <div class="relative pl-8">
-                    <div class="absolute left-0 top-2 bottom-2 w-[1px] bg-[#D4AF37]"></div>
+                    <div class="absolute left-0 top-2 bottom-2 w-[1px] bg-accent-gold"></div>
                     <span class="eyebrow block mb-3">Masterpieces</span>
-                    <h2 class="text-4xl md:text-5xl font-serif text-white">The Collection</h2>
+                    <h2 class="text-4xl md:text-5xl font-serif text-champagne">The Collection</h2>
                 </div>
                 <p class="text-body-copy text-sm leading-relaxed font-light md:w-1/3 md:text-right">
                     Where darkness meets luminescence.<br />
-                    <span class="italic text-[#D4AF37]">Silk, velvet, and the weight of the night.</span>
+                    <span class="italic text-accent-gold">Silk, velvet, and the weight of the night.</span>
                 </p>
             </div>
 
@@ -549,13 +556,13 @@ onBeforeUnmount(() => {
                         <img src="https://images.unsplash.com/photo-1595777457583-95e059d581b8?q=80&w=1983&auto=format&fit=crop"
                             alt="Moonlit Velvet" class="w-full h-full object-cover" />
                         <div
-                            class="absolute inset-0 border border-white/5 group-hover:border-white/20 transition-colors duration-500">
+                            class="absolute inset-0 border border-platinum/10 group-hover:border-platinum/30 transition-colors duration-500">
                         </div>
                     </div>
                     <div class="flex justify-between items-start mt-2 px-2">
                         <div>
                             <h3
-                                class="text-3xl font-serif italic text-white group-hover:text-[#D4AF37] transition-colors duration-500">
+                                class="text-3xl font-serif italic text-champagne group-hover:text-accent-gold transition-colors duration-500">
                                 Moonlit Velvet
                             </h3>
                             <div class="flex items-center gap-3 mt-2">
@@ -575,7 +582,7 @@ onBeforeUnmount(() => {
                     <div class="flex justify-between items-start mt-2 px-2">
                         <div>
                             <h3
-                                class="text-2xl font-serif italic text-white group-hover:text-[#a5b4fc] transition-colors duration-500">
+                                class="text-2xl font-serif italic text-champagne group-hover:text-emerald-glow transition-colors duration-500">
                                 Nebula Gown
                             </h3>
                             <div class="flex items-center gap-3 mt-2">
@@ -592,19 +599,19 @@ onBeforeUnmount(() => {
                         <img src="https://images.unsplash.com/photo-1539008835657-9e8e9680c956?q=80&w=1887&auto=format&fit=crop"
                             alt="Ethereal" class="w-full h-full object-cover object-top" />
                         <div
-                            class="absolute inset-0 bg-black/50 group-hover:bg-black/20 transition-colors duration-500">
+                            class="absolute inset-0 bg-obsidian/70 group-hover:bg-obsidian/30 transition-colors duration-500">
                         </div>
                         <div class="absolute inset-0 flex items-center justify-center mix-blend-overlay">
                             <h2
-                                class="skew-title text-4xl md:text-8xl z-10 opacity-0 project-text-reveal text-white/90">
+                                class="skew-title text-4xl md:text-8xl z-10 opacity-0 project-text-reveal text-champagne/90">
                                 ETHEREAL</h2>
                         </div>
                     </div>
                     <div
-                        class="flex flex-col md:flex-row md:items-center justify-between mt-4 px-4 border-t border-white/10 pt-4 gap-4">
-                        <h3 class="text-2xl font-serif italic text-white">The Royal Silhouette</h3>
+                        class="flex flex-col md:flex-row md:items-center justify-between mt-4 px-4 border-t border-platinum/20 pt-4 gap-4">
+                        <h3 class="text-2xl font-serif italic text-champagne">The Royal Silhouette</h3>
                         <span
-                            class="text-[#D4AF37] text-xs tracking-[0.2em] border border-[#D4AF37] px-4 py-2 rounded-full hover:bg-[#D4AF37] hover:text-black transition-all cursor-pointer nav-link">
+                            class="text-accent-gold text-xs tracking-[0.2em] border border-accent-gold px-4 py-2 rounded-full hover:bg-accent-gold hover:text-obsidian transition-all cursor-pointer nav-link">
                             INQUIRE
                         </span>
                     </div>
@@ -612,19 +619,19 @@ onBeforeUnmount(() => {
             </div>
         </section>
 
-        <footer class="bg-black py-24 md:py-32 text-center relative overflow-hidden border-t border-white/5">
+        <footer class="bg-surface py-24 md:py-32 text-center relative overflow-hidden border-t border-platinum/10">
             <div
-                class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[80vw] h-[50vh] bg-[radial-gradient(ellipse_at_center,_rgba(75,0,130,0.15),_transparent_70%)] opacity-50 pointer-events-none">
+                class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[80vw] h-[50vh] bg-[radial-gradient(ellipse_at_center,_rgba(4,61,44,0.25),_transparent_70%)] opacity-50 pointer-events-none">
             </div>
-            <p class="text-[#D4AF37] text-xs tracking-[0.5em] mb-6 uppercase">By Appointment Only</p>
+            <p class="text-accent-gold text-xs tracking-[0.5em] mb-6 uppercase">By Appointment Only</p>
             <h2 class="skew-title text-4xl md:text-6xl mb-12 opacity-100" style="opacity: 1 !important;">YOUR LEGACY
             </h2>
             <div class="flex justify-center gap-8 text-[10px] tracking-[0.2em] text-muted uppercase relative z-10">
-                <a href="#" class="hover:text-white transition-colors nav-link">Instagram</a>
-                <span class="text-[#D4AF37]">•</span>
-                <a href="#" class="hover:text-white transition-colors nav-link">WeChat</a>
-                <span class="text-[#D4AF37]">•</span>
-                <a href="#" class="hover:text-white transition-colors nav-link">Email</a>
+                <a href="#" class="hover:text-champagne transition-colors nav-link">Instagram</a>
+                <span class="text-accent-gold">•</span>
+                <a href="#" class="hover:text-champagne transition-colors nav-link">WeChat</a>
+                <span class="text-accent-gold">•</span>
+                <a href="#" class="hover:text-champagne transition-colors nav-link">Email</a>
             </div>
             <p class="text-caption text-[10px] mt-24 tracking-[0.5em] relative z-10">© 2025 NOIR & ÉCLAT. PARIS /
                 SHANGHAI.</p>
