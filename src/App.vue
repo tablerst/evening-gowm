@@ -125,6 +125,7 @@ const updateRibbon = () => {
     const colors = geometry.attributes.color as THREE.BufferAttribute
 
     const widthSegments = config.segments
+    const heightSegments = 20 // 对应 initSilkCanvas 中的设置
     const verticesPerRow = widthSegments + 1
 
     const baseR = config.baseColor.r
@@ -138,30 +139,19 @@ const updateRibbon = () => {
         const ratio = col / widthSegments
         const x = ratio * config.length - config.length / 2
 
+        // 基础波浪
         let waveZ = Math.sin(x * 0.4 + time) * 1.2
         waveZ += Math.sin(x * 1.5 + time * 1.5) * 0.3
 
+        // 中心线 Y 偏移
         const centerY = Math.sin(x * 0.2 + time * 0.5) * 0.8
+        // 扭曲角度
         const twist = Math.sin(x * 0.3 + time * config.twistSpeed) * config.twistAmplitude
 
-        const idxTop = col
-        const idxBot = col + verticesPerRow
-        const halfWidth = config.width / 2
-
-        const topY = centerY + halfWidth * Math.cos(twist)
-        const topZ = waveZ + halfWidth * Math.sin(twist)
-        const botY = centerY - halfWidth * Math.cos(twist)
-        const botZ = waveZ - halfWidth * Math.sin(twist)
-
-        positions.setY(idxTop, topY)
-        positions.setZ(idxTop, topZ)
-        positions.setY(idxBot, botY)
-        positions.setZ(idxBot, botZ)
-
+        // 颜色计算因子
         const flowPhase = ratio * 5 * config.flowFrequency - time * 2
         let glowFactor = Math.sin(flowPhase)
         glowFactor = Math.pow((glowFactor + 1) / 2, 8)
-
         const twistHighlight = Math.abs(Math.sin(twist))
         const mixRatio = Math.min(glowFactor * 1.5 + twistHighlight * 0.2, 1)
 
@@ -169,8 +159,26 @@ const updateRibbon = () => {
         const g = baseG + (glowG - baseG) * mixRatio
         const b = baseB + (glowB - baseB) * mixRatio
 
-        colors.setXYZ(idxTop, r, g, b)
-        colors.setXYZ(idxBot, r, g, b)
+        // 遍历每一行（宽度方向）
+        for (let row = 0; row <= heightSegments; row++) {
+            const idx = row * verticesPerRow + col
+
+            // 计算归一化宽度坐标 (0 到 1)
+            const v = row / heightSegments
+            // 相对于中心的偏移量 (-width/2 到 +width/2)
+            const offset = (v - 0.5) * config.width
+
+            // 根据扭曲角度计算最终位置
+            // 绕 X 轴旋转 offset
+            const y = centerY + offset * Math.cos(twist)
+            const z = waveZ + offset * Math.sin(twist)
+
+            positions.setY(idx, y)
+            positions.setZ(idx, z)
+
+            // 设置颜色
+            colors.setXYZ(idx, r, g, b)
+        }
     }
 
     positions.needsUpdate = true
@@ -250,7 +258,8 @@ const initSilkCanvas = () => {
     renderer.outputColorSpace = THREE.SRGBColorSpace
     container.appendChild(renderer.domElement)
 
-    const geometry = new THREE.PlaneGeometry(config.length, config.width, config.segments, 2)
+    // 增加宽度方向的分段数，从 2 增加到 20，以解决光照伪影
+    const geometry = new THREE.PlaneGeometry(config.length, config.width, config.segments, 20)
     const positionAttr = geometry.attributes.position as THREE.BufferAttribute | undefined
     if (!positionAttr) {
         console.error('PlaneGeometry is missing position attribute')
@@ -478,7 +487,7 @@ onBeforeUnmount(() => {
                 <div ref="silkContainer" aria-hidden="true" class="absolute inset-0 pointer-events-none overflow-hidden"
                     id="silk-canvas"></div>
                 <div
-                    class="absolute inset-0 bg-gradient-to-br from-[rgba(25,25,112,0.2)] via-transparent to-[rgba(75,0,130,0.15)] pointer-events-none">
+                    class="absolute inset-0 bg-gradient-to-br from-[rgba(25,25,112,0.2)] via-transparent to-[rgba(75,0,130,0.15)] pointer-events-none backdrop-blur-[2px]">
                 </div>
                 <div
                     class="absolute inset-0 bg-gradient-to-t from-[var(--void-black)] via-transparent to-black/10 pointer-events-none">
