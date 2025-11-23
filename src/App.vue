@@ -19,6 +19,8 @@ let cursorDotRef: HTMLElement | null = null
 let cursorOutlineRef: HTMLElement | null = null
 
 const silkContainer = ref<HTMLDivElement | null>(null)
+const isNavCompacted = ref(false)
+const isReducedMotion = ref(false)
 
 type RibbonRuntimeConfig = {
     segments: number
@@ -40,6 +42,9 @@ let silkMaterial: THREE.MeshPhysicalMaterial | null = null
 let animationFrameId: number | null = null
 let resizeHandler: (() => void) | null = null
 let time = 0
+let scrollHandler: (() => void) | null = null
+let motionQuery: MediaQueryList | null = null
+let motionChangeHandler: ((event: MediaQueryListEvent) => void) | null = null
 
 const targetConfig: Omit<RibbonRuntimeConfig, 'segments' | 'width' | 'length'> = {
     speed: 0.4,
@@ -48,6 +53,17 @@ const targetConfig: Omit<RibbonRuntimeConfig, 'segments' | 'width' | 'length'> =
     flowFrequency: 0.8,
     baseColor: new THREE.Color(0x04140f),
     glowColor: new THREE.Color(0x0b5d3a),
+}
+
+const syncMotionPreference = (shouldReduce: boolean) => {
+    isReducedMotion.value = shouldReduce
+    if (shouldReduce) {
+        disposeSilk()
+        return
+    }
+    nextTick(() => {
+        initSilkCanvas()
+    })
 }
 
 const config: RibbonRuntimeConfig = {
@@ -240,7 +256,7 @@ const disposeSilk = () => {
 }
 
 const initSilkCanvas = () => {
-    if (!silkContainer.value || renderer) {
+    if (isReducedMotion.value || !silkContainer.value || renderer) {
         return
     }
 
@@ -430,20 +446,46 @@ const initAnimations = () => {
 }
 
 onMounted(() => {
-    if (window.matchMedia('(pointer: fine)').matches) {
+    if (typeof window !== 'undefined' && window.matchMedia('(pointer: fine)').matches) {
         initCursor()
     }
 
+    if (typeof window !== 'undefined' && 'matchMedia' in window) {
+        motionQuery = window.matchMedia('(prefers-reduced-motion: reduce)')
+        syncMotionPreference(motionQuery.matches)
+        motionChangeHandler = (event: MediaQueryListEvent) => {
+            syncMotionPreference(event.matches)
+        }
+        motionQuery.addEventListener('change', motionChangeHandler)
+    } else {
+        syncMotionPreference(false)
+    }
+
     initAnimations()
-    nextTick(() => {
-        initSilkCanvas()
-    })
+
+    if (typeof window !== 'undefined') {
+        scrollHandler = () => {
+            isNavCompacted.value = window.scrollY > 40
+        }
+        window.addEventListener('scroll', scrollHandler, { passive: true })
+    }
 })
 
 onBeforeUnmount(() => {
     if (moveHandler) {
         window.removeEventListener('mousemove', moveHandler)
     }
+
+    if (typeof window !== 'undefined' && scrollHandler) {
+        window.removeEventListener('scroll', scrollHandler)
+    }
+    scrollHandler = null
+
+    if (motionQuery && motionChangeHandler) {
+        motionQuery.removeEventListener('change', motionChangeHandler)
+    }
+    motionQuery = null
+    motionChangeHandler = null
 
     hoverBindings.forEach(({ element, enter, leave }) => {
         element.removeEventListener('mouseenter', enter)
@@ -470,171 +512,270 @@ onBeforeUnmount(() => {
         <div class="cursor-dot" aria-hidden="true"></div>
         <div class="cursor-outline" aria-hidden="true"></div>
 
-        <nav class="nav-glass fixed top-0 w-full z-50 px-6 md:px-8 py-4 flex justify-between items-center">
+        <nav :class="[
+            'nav-glass fixed top-0 w-full z-50 px-6 md:px-12 flex justify-between items-center transition-all duration-500',
+            isNavCompacted ? 'py-3 nav-glass--compact' : 'py-5'
+        ]">
             <div
-                class="text-lg md:text-xl font-serif text-champagne tracking-[0.2em] font-bold flex items-center gap-2 nav-link">
-                <span class="text-accent-gold">✦</span>
+                class="text-lg md:text-xl font-serif text-champagne tracking-[0.25em] font-bold flex items-center gap-3 nav-link">
+                <span class="text-accent-gold text-base">✦</span>
                 NOIR & ÉCLAT
             </div>
-            <div class="hidden md:flex space-x-12 text-xs tracking-[0.2em] text-muted">
-                <a href="#" class="hover:text-champagne transition-colors duration-300 nav-link">COLLECTIONS</a>
-                <a href="#" class="hover:text-champagne transition-colors duration-300 nav-link">RUNWAY</a>
-                <a href="#" class="hover:text-champagne transition-colors duration-300 nav-link">ATELIER</a>
-                <a href="#" class="hover:text-champagne transition-colors duration-300 nav-link">CONTACT</a>
+            <div class="hidden md:flex space-x-10 text-[11px] tracking-[0.35em] text-muted">
+                <a href="#featured" class="hover:text-champagne transition-colors duration-300 nav-link">COLLECTIONS</a>
+                <a href="#best" class="hover:text-champagne transition-colors duration-300 nav-link">BEST SELLERS</a>
+                <a href="#couture" class="hover:text-champagne transition-colors duration-300 nav-link">COUTURE</a>
+                <a href="#contact" class="hover:text-champagne transition-colors duration-300 nav-link">CONTACT</a>
             </div>
             <button
-                class="border border-accent-gold text-accent-gold px-6 md:px-8 py-2 text-[10px] tracking-[0.3em] uppercase hover:bg-accent-gold hover:text-obsidian transition-all duration-500 nav-link">
-                Private View
+                class="nav-cta border border-accent-gold text-accent-gold px-5 md:px-7 py-2 text-[10px] tracking-[0.35em] uppercase hover:bg-accent-gold hover:text-obsidian transition-all duration-500 nav-link">
+                PRIVATE VIEWING
             </button>
         </nav>
 
-        <header class="relative w-full h-screen flex items-center justify-center overflow-hidden bg-surface">
-            <div class="absolute inset-0 w-full h-[120%] -top-[10%]" id="hero-bg">
-                <div ref="silkContainer" aria-hidden="true" class="absolute inset-0 pointer-events-none overflow-hidden"
-                    id="silk-canvas"></div>
-                <div
-                    class="absolute inset-0 bg-gradient-to-br from-[rgba(4,61,44,0.35)] via-transparent to-[rgba(5,5,5,0.5)] pointer-events-none backdrop-blur-[2px]">
-                </div>
-                <div
-                    class="absolute inset-0 bg-gradient-to-t from-[var(--bg-obsidian)] via-transparent to-obsidian/10 pointer-events-none">
-                </div>
+        <header class="hero-section relative overflow-hidden bg-surface" aria-labelledby="hero-title">
+            <div class="hero-backdrop absolute inset-0" id="hero-bg" aria-hidden="true">
+                <div class="hero-backdrop__veil"></div>
+                <div class="hero-backdrop__gradient"></div>
+                <div class="hero-backdrop__noise"></div>
             </div>
 
-
-
-            <div class="relative z-10 w-full h-full flex flex-col justify-center px-6 md:px-20 pointer-events-none">
-                <div class="pointer-events-auto md:ml-[5%] lg:ml-[10%]">
-                    <p
-                        class="italic-serif text-hero-sub text-base md:text-xl mb-6 tracking-[0.3em] opacity-0 hero-sub text-left">
-                        The <span class="text-accent-gold">2025</span> Midnight Series
+            <div class="hero-grid relative z-10 grid gap-12 lg:gap-16 px-6 md:px-12 lg:px-24 py-32">
+                <div class="hero-left col-span-12 lg:col-span-5">
+                    <p class="hero-eyebrow hero-sub opacity-0">
+                        THE COLLECTION · <span class="text-accent-gold">THE EMERALD NIGHT</span>
                     </p>
-                    <h1 class="flex flex-col items-start gap-0 scale-y-110">
-                        <span
-                            class="skew-title text-6xl md:text-9xl lg:text-[10rem] tracking-tighter leading-[0.85] bg-clip-text text-transparent bg-gradient-to-b from-white via-gray-200 to-gray-500 drop-shadow-[0_0_15px_rgba(100,100,255,0.3)]"
-                            id="hero-text-1">OBSIDIAN</span>
-                        <span
-                            class="skew-title text-6xl md:text-9xl lg:text-[10rem] tracking-tighter leading-[0.85] ml-12 md:ml-32 lg:ml-48 bg-clip-text text-transparent bg-gradient-to-b from-white via-gray-200 to-gray-500 drop-shadow-[0_0_15px_rgba(100,100,255,0.3)]"
-                            id="hero-text-2">DREAMS</span>
+                    <h1 class="hero-title" id="hero-title">
+                        <span id="hero-text-1">OBSIDIAN</span>
+                        <span id="hero-text-2">DREAMS</span>
                     </h1>
-                    <div class="mt-16 opacity-0 hero-cta flex items-center gap-6 ml-2">
-                        <div class="h-[1px] w-16 bg-gradient-to-r from-accent-gold to-transparent opacity-50"></div>
-                        <span class="eyebrow nav-link hover:text-champagne transition-colors cursor-pointer">Discover
-                            the
-                            Essence</span>
+                    <p class="hero-lede text-body-copy">
+                        黑曜石般的背景衬托祖母绿的丝绸流光，
+                        低声讲述 Atelier 手工缝制的仪式感。14 道工序、900 小时，让夜色在你指尖流动。
+                    </p>
+                    <div class="hero-cta flex flex-col sm:flex-row gap-4 mt-12 opacity-0">
+                        <button class="hero-button hero-button--primary nav-link" type="button">
+                            探索系列
+                        </button>
+                        <button class="hero-button hero-button--secondary nav-link" type="button">
+                            预约试穿
+                        </button>
+                    </div>
+                    <div class="hero-pill-group">
+                        <div class="hero-pill">
+                            <span class="hero-pill__label">COUTURE SALON</span>
+                            <span class="hero-pill__value">14 ateliers worldwide</span>
+                        </div>
+                        <div class="hero-pill">
+                            <span class="hero-pill__label">HAND-CRAFTED</span>
+                            <span class="hero-pill__value">900 hours / gown</span>
+                        </div>
                     </div>
                 </div>
-            </div>
 
-            <div
-                class="absolute bottom-12 left-6 md:left-12 text-muted font-serif italic text-lg hidden md:block opacity-0 hero-deco">
-                Vol. II
-            </div>
-            <div
-                class="absolute bottom-12 right-6 md:right-12 flex flex-col gap-6 hidden md:flex opacity-0 hero-deco items-center">
-                <div class="gold-line-vertical h-12"></div>
-                <span class="writing-vertical text-[10px] tracking-[0.5em] text-caption">SCROLL</span>
+                <div class="hero-middle col-span-12 lg:col-span-3">
+                    <div class="hero-card">
+                        <p class="hero-card__title">SILK LUMINESCENCE</p>
+                        <p class="hero-card__body">
+                            单条丝绸缓慢呼吸，S 形弧线从右上垂落到左下，
+                            高光保持克制，仿佛剧场灯光在布料上游走。
+                        </p>
+                        <div class="hero-card__meta">
+                            <span>12s breathing cycle</span>
+                            <span>WCAG AA</span>
+                        </div>
+                    </div>
+                    <div class="hero-divider"></div>
+                    <div class="hero-note">
+                        <span class="hero-note__eyebrow">APPOINTMENT</span>
+                        <p>72 小时内专属顾问回复，
+                            <span class="text-accent-gold">定制流程一次完成。</span>
+                        </p>
+                    </div>
+                </div>
+
+                <div class="hero-right col-span-12 lg:col-span-4">
+                    <div class="hero-silk-shell" aria-hidden="true">
+                        <div ref="silkContainer" class="hero-silk-canvas"></div>
+                        <div class="hero-silk-fallback" v-if="isReducedMotion">
+                            <div class="hero-silk-fallback__glow"></div>
+                        </div>
+                    </div>
+                    <div class="hero-right__caption">
+                        <span>VOL. II · EMERALD NIGHT</span>
+                        <span>Scroll</span>
+                    </div>
+                </div>
             </div>
         </header>
 
-        <section class="relative w-full min-h-screen py-24 md:py-32 px-6 md:px-20 bg-obsidian">
-            <div class="mb-20 md:mb-32 flex flex-col md:flex-row items-start md:items-end justify-between gap-8">
-                <div class="relative pl-8">
-                    <div class="absolute left-0 top-2 bottom-2 w-[1px] bg-accent-gold"></div>
-                    <span class="eyebrow block mb-3">Masterpieces</span>
-                    <h2 class="text-4xl md:text-5xl font-serif text-champagne">The Collection</h2>
-                </div>
-                <p class="text-body-copy text-sm leading-relaxed font-light md:w-1/3 md:text-right">
-                    Where darkness meets luminescence.<br />
-                    <span class="italic text-accent-gold">Silk, velvet, and the weight of the night.</span>
-                </p>
-            </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-12 gap-8 md:gap-y-40">
-                <div class="col-span-1 md:col-span-7 flex flex-col gap-6 group project-item">
-                    <div
-                        class="image-wrapper aspect-[3/4] w-full relative cursor-none-important grayscale-[30%] hover:grayscale-0 transition-all duration-700">
-                        <img src="https://images.unsplash.com/photo-1595777457583-95e059d581b8?q=80&w=1983&auto=format&fit=crop"
-                            alt="Moonlit Velvet" class="w-full h-full object-cover" />
-                        <div
-                            class="absolute inset-0 border border-platinum/10 group-hover:border-platinum/30 transition-colors duration-500">
-                        </div>
+        <main class="bg-obsidian">
+            <section id="featured" class="section-block">
+                <div class="section-heading">
+                    <div class="section-heading__line"></div>
+                    <div>
+                        <p class="eyebrow">FEATURED COLLECTION</p>
+                        <h2>精选系列 · Emerald Reverie</h2>
                     </div>
-                    <div class="flex justify-between items-start mt-2 px-2">
-                        <div>
-                            <h3
-                                class="text-3xl font-serif italic text-champagne group-hover:text-accent-gold transition-colors duration-500">
-                                Moonlit Velvet
-                            </h3>
-                            <div class="flex items-center gap-3 mt-2">
-                                <span class="w-8 h-px bg-gray-700"></span>
-                                <p class="text-[10px] text-caption uppercase tracking-[0.3em]">Silver Thread / 900 Hours
-                                </p>
+                    <p class="section-heading__lede">
+                        12 列栅格下的丝绒留白，让礼服成为空间主角。
+                        每张卡片都以 3:4 比例呈现裙摆垂坠感。
+                    </p>
+                </div>
+
+                <div class="collection-grid">
+                    <article class="collection-card project-item">
+                        <div class="collection-card__media">
+                            <img src="https://images.unsplash.com/photo-1595777457583-95e059d581b8?q=80&w=1983&auto=format&fit=crop"
+                                alt="Moonlit Velvet" loading="lazy" />
+                        </div>
+                        <div class="collection-card__content">
+                            <h3>Moonlit Velvet</h3>
+                            <p>Silver Thread Atelier · 900 Hours</p>
+                        </div>
+                    </article>
+
+                    <article class="collection-card project-item">
+                        <div class="collection-card__media">
+                            <img src="https://images.unsplash.com/photo-1566174053879-31528523f8ae?q=80&w=1983&auto=format&fit=crop"
+                                alt="Nebula Gown" loading="lazy" />
+                        </div>
+                        <div class="collection-card__content">
+                            <h3>Nebula Gown</h3>
+                            <p>Deep Purple Chiffon · Atelier 04</p>
+                        </div>
+                    </article>
+
+                    <article class="collection-card collection-card--highlight project-item">
+                        <div class="collection-card__media">
+                            <img src="https://images.unsplash.com/photo-1539008835657-9e8e9680c956?q=80&w=1887&auto=format&fit=crop"
+                                alt="Ethereal" loading="lazy" />
+                            <div class="collection-card__overlay">
+                                <span class="eyebrow">ETHEREAL</span>
                             </div>
                         </div>
-                    </div>
+                        <div class="collection-card__content">
+                            <h3>The Royal Silhouette</h3>
+                            <p>Obsidian Tulle · Limited 12</p>
+                            <button class="tag-chip nav-link" type="button">INQUIRE</button>
+                        </div>
+                    </article>
                 </div>
+            </section>
 
-                <div class="col-span-1 md:col-span-4 md:col-start-9 md:mt-32 flex flex-col gap-6 group project-item">
-                    <div class="image-wrapper aspect-[3/4] w-full relative">
-                        <img src="https://images.unsplash.com/photo-1566174053879-31528523f8ae?q=80&w=2548&auto=format&fit=crop"
-                            alt="Nebula Gown" class="w-full h-full object-cover" />
-                    </div>
-                    <div class="flex justify-between items-start mt-2 px-2">
-                        <div>
-                            <h3
-                                class="text-2xl font-serif italic text-champagne group-hover:text-emerald-glow transition-colors duration-500">
-                                Nebula Gown
-                            </h3>
-                            <div class="flex items-center gap-3 mt-2">
-                                <span class="w-8 h-px bg-gray-700"></span>
-                                <p class="text-[10px] text-caption uppercase tracking-[0.3em]">Deep Purple Chiffon</p>
+            <section id="best" class="section-block section-block--dense">
+                <div class="section-heading section-heading--compact">
+                    <p class="eyebrow">BEST SELLERS</p>
+                    <h2>热门单品 · Best Sellers</h2>
+                </div>
+                <div class="best-grid">
+                    <article class="best-card">
+                        <div class="best-card__media">
+                            <img src="https://images.unsplash.com/photo-1514996937319-344454492b37?q=80&w=900&auto=format&fit=crop"
+                                alt="Asteria" loading="lazy" />
+                        </div>
+                        <div class="best-card__body">
+                            <div>
+                                <h3>Asteria Veil</h3>
+                                <p>Hand-beaded constellation lace</p>
+                            </div>
+                            <div class="best-card__footer">
+                                <span class="price">¥ 128,000</span>
+                                <button class="hero-button hero-button--ghost nav-link" type="button">加入心愿单</button>
                             </div>
                         </div>
+                    </article>
+
+                    <article class="best-card">
+                        <div class="best-card__media">
+                            <img src="https://images.unsplash.com/photo-1475180098004-ca77a66827be?q=80&w=900&auto=format&fit=crop"
+                                alt="Seraphine" loading="lazy" />
+                        </div>
+                        <div class="best-card__body">
+                            <div>
+                                <h3>Seraphine Column</h3>
+                                <p>Bias-cut satin · Atelier Milano</p>
+                            </div>
+                            <div class="best-card__footer">
+                                <span class="price">¥ 96,000</span>
+                                <button class="hero-button hero-button--ghost nav-link" type="button">预约试穿</button>
+                            </div>
+                        </div>
+                    </article>
+
+                    <article class="best-card">
+                        <div class="best-card__media">
+                            <img src="https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?q=80&w=900&auto=format&fit=crop"
+                                alt="Nocturne" loading="lazy" />
+                        </div>
+                        <div class="best-card__body">
+                            <div>
+                                <h3>Nocturne Cape</h3>
+                                <p>Velvet gradient · Detachable cape</p>
+                            </div>
+                            <div class="best-card__footer">
+                                <span class="price">¥ 138,000</span>
+                                <button class="hero-button hero-button--ghost nav-link" type="button">查看细节</button>
+                            </div>
+                        </div>
+                    </article>
+                </div>
+            </section>
+
+            <section id="couture" class="section-block section-couture">
+                <div class="section-heading">
+                    <div class="section-heading__line"></div>
+                    <div>
+                        <p class="eyebrow">COUTURE & CUSTOM</p>
+                        <h2>定制服务 · Couture & Custom</h2>
                     </div>
                 </div>
-
-                <div
-                    class="col-span-1 md:col-span-10 md:col-start-2 mt-12 md:mt-20 flex flex-col gap-6 group project-item">
-                    <div class="image-wrapper aspect-[16/9] w-full relative">
-                        <img src="https://images.unsplash.com/photo-1539008835657-9e8e9680c956?q=80&w=1887&auto=format&fit=crop"
-                            alt="Ethereal" class="w-full h-full object-cover object-top" />
-                        <div
-                            class="absolute inset-0 bg-obsidian/70 group-hover:bg-obsidian/30 transition-colors duration-500">
-                        </div>
-                        <div class="absolute inset-0 flex items-center justify-center mix-blend-overlay">
-                            <h2
-                                class="skew-title text-4xl md:text-8xl z-10 opacity-0 project-text-reveal text-champagne/90">
-                                ETHEREAL</h2>
-                        </div>
+                <div class="couture-grid">
+                    <div class="couture-text">
+                        <p>
+                            Atelier 团队根据体温、肤色与出席场合定制配色，
+                            每次量体都在玻璃拟态的静谧空间完成。
+                        </p>
+                        <ul>
+                            <li>一对一造型顾问 · 线下 / 远程</li>
+                            <li>丝绒面料触感档案 &amp; 香氛礼包</li>
+                            <li>72 小时出具草图，14 天完成初版试衣</li>
+                        </ul>
                     </div>
-                    <div
-                        class="flex flex-col md:flex-row md:items-center justify-between mt-4 px-4 border-t border-platinum/20 pt-4 gap-4">
-                        <h3 class="text-2xl font-serif italic text-champagne">The Royal Silhouette</h3>
-                        <span
-                            class="text-accent-gold text-xs tracking-[0.2em] border border-accent-gold px-4 py-2 rounded-full hover:bg-accent-gold hover:text-obsidian transition-all cursor-pointer nav-link">
-                            INQUIRE
-                        </span>
+                    <div class="couture-panel" id="contact">
+                        <div class="couture-panel__badge">By Appointment Only</div>
+                        <h3>预约专属试穿</h3>
+                        <p>留下你的城市与日期，我们将安排最近的 Emerald Night Salon。</p>
+                        <form class="couture-form" aria-label="预约试穿">
+                            <label>
+                                <span>城市</span>
+                                <input type="text" name="city" placeholder="Shanghai / Paris" />
+                            </label>
+                            <label>
+                                <span>日期</span>
+                                <input type="date" name="date" />
+                            </label>
+                            <button class="hero-button hero-button--primary w-full nav-link" type="button">
+                                提交预约
+                            </button>
+                        </form>
                     </div>
                 </div>
-            </div>
-        </section>
+            </section>
+        </main>
 
-        <footer class="bg-surface py-24 md:py-32 text-center relative overflow-hidden border-t border-platinum/10">
-            <div
-                class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[80vw] h-[50vh] bg-[radial-gradient(ellipse_at_center,_rgba(4,61,44,0.25),_transparent_70%)] opacity-50 pointer-events-none">
-            </div>
-            <p class="text-accent-gold text-xs tracking-[0.5em] mb-6 uppercase">By Appointment Only</p>
-            <h2 class="skew-title text-4xl md:text-6xl mb-12 opacity-100" style="opacity: 1 !important;">YOUR LEGACY
-            </h2>
-            <div class="flex justify-center gap-8 text-[10px] tracking-[0.2em] text-muted uppercase relative z-10">
-                <a href="#" class="hover:text-champagne transition-colors nav-link">Instagram</a>
+        <footer class="site-footer">
+            <div class="site-footer__glow" aria-hidden="true"></div>
+            <p class="eyebrow">BY APPOINTMENT ONLY</p>
+            <h2 class="skew-title text-4xl md:text-6xl">YOUR LEGACY</h2>
+            <div class="site-footer__links">
+                <a href="#" class="nav-link">Instagram</a>
                 <span class="text-accent-gold">•</span>
-                <a href="#" class="hover:text-champagne transition-colors nav-link">WeChat</a>
+                <a href="#" class="nav-link">WeChat</a>
                 <span class="text-accent-gold">•</span>
-                <a href="#" class="hover:text-champagne transition-colors nav-link">Email</a>
+                <a href="#" class="nav-link">Email</a>
             </div>
-            <p class="text-caption text-[10px] mt-24 tracking-[0.5em] relative z-10">© 2025 NOIR & ÉCLAT. PARIS /
-                SHANGHAI.</p>
+            <p class="site-footer__legal">© 2025 NOIR & ÉCLAT · PARIS / SHANGHAI</p>
         </footer>
     </div>
 </template>
