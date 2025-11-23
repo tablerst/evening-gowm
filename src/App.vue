@@ -209,21 +209,23 @@ const updateRibbon = () => {
         const ratio = col / widthSegments
         const x = ratio * config.length - config.length / 2
 
-        // 基础波浪
-        let waveZ = Math.sin(x * 0.4 + time) * 1.2
-        waveZ += Math.sin(x * 1.5 + time * 1.5) * 0.3
+        // 基础波浪 - 更平滑的 S 形
+        let waveZ = Math.sin(x * 0.3 + time * 0.8) * 2.0
+        waveZ += Math.sin(x * 1.0 + time * 1.2) * 0.5
 
-        // 中心线 Y 偏移
-        const centerY = Math.sin(x * 0.2 + time * 0.5) * 0.8
-        // 扭曲角度
-        const twist = Math.sin(x * 0.3 + time * config.twistSpeed) * config.twistAmplitude
+        // 中心线 Y 偏移 - 模拟飘动
+        const centerY = Math.sin(x * 0.2 + time * 0.4) * 1.5
+
+        // 扭曲角度 - 更加柔和
+        const twist = Math.sin(x * 0.25 + time * config.twistSpeed) * config.twistAmplitude
 
         // 颜色计算因子
-        const flowPhase = ratio * 5 * config.flowFrequency - time * 2
+        const flowPhase = ratio * 4 * config.flowFrequency - time * 1.5
         let glowFactor = Math.sin(flowPhase)
-        glowFactor = Math.pow((glowFactor + 1) / 2, 8)
-        const twistHighlight = Math.abs(Math.sin(twist))
-        const mixRatio = Math.min(glowFactor * 1.5 + twistHighlight * 0.2, 1)
+        glowFactor = Math.pow((glowFactor + 1) / 2, 6) // 锐化高光
+
+        const twistHighlight = Math.abs(Math.sin(twist + time * 0.5))
+        const mixRatio = Math.min(glowFactor * 1.2 + twistHighlight * 0.3, 1)
 
         const r = baseR + (glowR - baseR) * mixRatio
         const g = baseG + (glowG - baseG) * mixRatio
@@ -316,20 +318,20 @@ const initSilkCanvas = () => {
     const width = rect.width || window.innerWidth
     const height = rect.height || window.innerHeight
 
-    camera = new THREE.PerspectiveCamera(35, width / height, 0.1, 1000)
-    camera.position.set(0, 0, 20)
+    camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 1000)
+    camera.position.set(0, 0, 30)
 
     renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true })
-    renderer.setPixelRatio(window.devicePixelRatio)
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
     renderer.setSize(width, height)
     renderer.setClearAlpha(0)
     renderer.toneMapping = THREE.ACESFilmicToneMapping
-    renderer.toneMappingExposure = 1.2
+    renderer.toneMappingExposure = 1.0
     renderer.outputColorSpace = THREE.SRGBColorSpace
     container.appendChild(renderer.domElement)
 
     // 增加宽度方向的分段数，从 2 增加到 20，以解决光照伪影
-    const geometry = new THREE.PlaneGeometry(config.length, config.width, config.segments, 20)
+    const geometry = new THREE.PlaneGeometry(config.length * 1.5, config.width, config.segments, 30)
     const positionAttr = geometry.attributes.position as THREE.BufferAttribute | undefined
     if (!positionAttr) {
         console.error('PlaneGeometry is missing position attribute')
@@ -342,33 +344,40 @@ const initSilkCanvas = () => {
         color: 0xffffff,
         vertexColors: true,
         emissive: 0x050510,
-        metalness: 0.8,
-        roughness: 0.3,
-        clearcoat: 1,
+        metalness: 0.6,
+        roughness: 0.4,
+        clearcoat: 0.8,
         clearcoatRoughness: 0.2,
         side: THREE.DoubleSide,
         flatShading: false,
     })
 
     ribbonMesh = new THREE.Mesh(geometry, silkMaterial)
-    ribbonMesh.rotation.z = Math.PI / 3
-    ribbonMesh.rotation.x = Math.PI / 6
-    ribbonMesh.position.x = 2
+    // 调整旋转角度，使其从右上流向左下
+    ribbonMesh.rotation.z = Math.PI / 2.2
+    ribbonMesh.rotation.x = Math.PI / 5
+    ribbonMesh.position.set(5, 0, 0)
     scene.add(ribbonMesh)
 
     // 模拟月光环境
-    const ambientLight = new THREE.AmbientLight(0x1c392d, 1.1)
+    const ambientLight = new THREE.AmbientLight(0x1c392d, 0.8)
     scene.add(ambientLight)
 
-    // 主轮廓光
-    const mainLight = new THREE.DirectionalLight(0xf6e7c8, 2.4)
-    mainLight.position.set(5, 5, 5)
+    // 主轮廓光 - 增强高光
+    const mainLight = new THREE.DirectionalLight(0xf6e7c8, 3.0)
+    mainLight.position.set(10, 10, 10)
     scene.add(mainLight)
 
     // 底部补光，增加层次
-    const fillLight = new THREE.DirectionalLight(0x0a3225, 1.3)
-    fillLight.position.set(-5, -5, 0)
+    const fillLight = new THREE.DirectionalLight(0x0a3225, 1.5)
+    fillLight.position.set(-5, -10, 5)
     scene.add(fillLight)
+
+    // 增加一个背光，勾勒边缘
+    const backLight = new THREE.SpotLight(0x0b5d3a, 5)
+    backLight.position.set(0, 10, -10)
+    backLight.lookAt(0, 0, 0)
+    scene.add(backLight)
 
     resizeHandler = () => {
         if (!renderer || !camera || !silkContainer.value) {
@@ -610,8 +619,8 @@ onBeforeUnmount(() => {
             </div>
 
             <div class="hero-shell page-shell">
-                <div class="hero-grid relative z-10 grid gap-12 lg:gap-16">
-                    <div class="hero-left col-span-12 lg:col-span-5">
+                <div class="hero-grid relative z-10 grid gap-12 lg:gap-16 items-center min-h-[80vh]">
+                    <div class="hero-left col-span-12 lg:col-span-7 xl:col-span-6">
                         <div class="hero-left__veil" aria-hidden="true"></div>
                         <div class="hero-ambient hero-deco" aria-hidden="true"></div>
                         <div class="hero-axis hero-deco" aria-hidden="true">
@@ -671,35 +680,17 @@ onBeforeUnmount(() => {
                         </div>
                     </div>
 
-                    <div class="hero-middle col-span-12 lg:col-span-3">
-                        <div class="hero-card">
-                            <p class="hero-card__title">SILK LUMINESCENCE</p>
-                            <p class="hero-card__body">
-                                单条丝绸缓慢呼吸，S 形弧线从右上垂落到左下，
-                                高光保持克制，仿佛剧场灯光在布料上游走。
-                            </p>
-                            <div class="hero-card__meta">
-                                <span>12s breathing cycle</span>
-                                <span>WCAG AA</span>
-                            </div>
-                        </div>
-                        <div class="hero-divider"></div>
-                        <div class="hero-note">
-                            <span class="hero-note__eyebrow">APPOINTMENT</span>
-                            <p>72 小时内专属顾问回复，
-                                <span class="text-accent-gold">定制流程一次完成。</span>
-                            </p>
-                        </div>
-                    </div>
+                    <!-- 空白过渡区，留给丝绸流动 -->
+                    <div class="hidden lg:block lg:col-span-1"></div>
 
-                    <div class="hero-right col-span-12 lg:col-span-4">
+                    <div class="hero-right col-span-12 lg:col-span-4 xl:col-span-5 relative h-full min-h-[50vh]">
                         <div class="hero-silk-shell" aria-hidden="true">
                             <div ref="silkContainer" class="hero-silk-canvas"></div>
                             <div class="hero-silk-fallback" v-if="isReducedMotion || shouldUseStaticSilk">
                                 <div class="hero-silk-fallback__glow"></div>
                             </div>
                         </div>
-                        <div class="hero-right__caption">
+                        <div class="hero-right__caption absolute bottom-0 right-0 left-0">
                             <span>VOL. II · EMERALD NIGHT</span>
                             <span>Scroll</span>
                         </div>

@@ -549,12 +549,14 @@
   }
 
   .hero-silk-shell {
-    position: relative;
-    height: min(60vw, 32rem);
-    border-radius: 2.5rem 0 0 2.5rem;
-    overflow: hidden;
-    border: 1px solid rgba(232, 214, 179, 0.12);
-    background: radial-gradient(circle at 60% 20%, rgba(5, 110, 65, 0.4), rgba(5, 5, 5, 0.9));
+    position: absolute;
+    inset: -20% -20% -20% -10%;
+    border-radius: 0;
+    overflow: visible;
+    border: none;
+    background: transparent;
+    z-index: -1;
+    pointer-events: none;
   }
 
   .hero-silk-canvas,
