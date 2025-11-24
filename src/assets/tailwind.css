@@ -391,10 +391,10 @@
   .hero-title {
     font-family: 'Cinzel', serif;
     font-weight: 900;
-    font-size: clamp(3.5rem, 8vw, 6.5rem);
+    font-size: clamp(2rem, 9vw, 6.5rem);
     letter-spacing: 0.05em;
     line-height: 0.95;
-    transform: skewX(-12deg);
+    transform: skewX(-6deg);
     text-transform: uppercase;
     color: transparent;
     background: linear-gradient(180deg, var(--text-champagne), rgba(232, 214, 179, 0.4));
@@ -403,6 +403,12 @@
     display: flex;
     flex-direction: column;
     gap: 0.35em;
+  }
+
+  @media (min-width: 1024px) {
+    .hero-title {
+      transform: skewX(-12deg);
+    }
   }
 
   .hero-title span {
@@ -484,7 +490,14 @@
     padding: 0.65rem 1.5rem;
     backdrop-filter: blur(8px);
     background: rgba(8, 20, 15, 0.65);
-    min-width: max(45%, 220px);
+    width: 100%;
+  }
+
+  @media (min-width: 768px) {
+    .hero-pill {
+      width: auto;
+      min-width: max(45%, 220px);
+    }
   }
 
   .hero-pill__label {

@@ -631,8 +631,8 @@ onBeforeUnmount(() => {
             </div>
 
             <div class="hero-shell page-shell">
-                <div class="hero-grid relative z-10 grid gap-12 lg:gap-16 items-center min-h-[80vh]">
-                    <div class="hero-left col-span-12 lg:col-span-7 xl:col-span-6">
+                <div class="hero-grid relative z-10 grid gap-6 lg:gap-16 items-center min-h-[80vh]">
+                    <div class="hero-left relative z-20 col-span-12 lg:col-span-7 xl:col-span-6 w-full">
                         <div class="hero-left__veil" aria-hidden="true"></div>
                         <div class="hero-ambient hero-deco" aria-hidden="true"></div>
                         <div class="hero-axis hero-deco" aria-hidden="true">
@@ -672,11 +672,15 @@ onBeforeUnmount(() => {
                             黑曜石般的背景衬托祖母绿的丝绸流光，
                             低声讲述 Atelier 手工缝制的仪式感。14 道工序、900 小时，让夜色在你指尖流动。
                         </p>
-                        <div class="hero-cta flex flex-col sm:flex-row gap-4 mt-12 opacity-0">
-                            <button class="hero-button hero-button--primary nav-link" type="button">
+                        <div class="hero-cta flex flex-col sm:flex-row gap-4 mt-12 opacity-0 w-full sm:w-auto">
+                            <button
+                                class="hero-button hero-button--primary nav-link w-full sm:w-auto flex justify-center items-center"
+                                type="button">
                                 探索系列
                             </button>
-                            <button class="hero-button hero-button--secondary nav-link" type="button">
+                            <button
+                                class="hero-button hero-button--secondary nav-link w-full sm:w-auto flex justify-center items-center"
+                                type="button">
                                 预约试穿
                             </button>
                         </div>
@@ -695,7 +699,8 @@ onBeforeUnmount(() => {
                     <!-- 空白过渡区，留给丝绸流动 -->
                     <div class="hidden lg:block lg:col-span-1"></div>
 
-                    <div class="hero-right col-span-12 lg:col-span-4 xl:col-span-5 relative h-full min-h-[50vh]">
+                    <div
+                        class="hero-right absolute inset-0 z-0 lg:static lg:col-span-4 xl:col-span-5 lg:relative lg:h-full lg:min-h-[50vh]">
                         <div class="hero-silk-shell" aria-hidden="true">
                             <div ref="silkContainer" class="hero-silk-canvas"></div>
                             <div class="hero-silk-fallback" v-if="isReducedMotion || shouldUseStaticSilk">
