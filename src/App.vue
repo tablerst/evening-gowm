@@ -919,8 +919,8 @@ onBeforeUnmount(() => {
 
                         <article class="bento-card bento-card--tall project-item">
                             <div class="bento-card__media" aria-hidden="true">
-                                <img src="https://images.unsplash.com/photo-1429257413823-8a01dd0e9701?q=80&w=1200&auto=format&fit=crop"
-                                    alt="Hand pleated silk" loading="lazy" />
+                                <img src="https://images.unsplash.com/photo-1515372039744-b8f02a3ae446?q=80&w=800&auto=format&fit=crop"
+                                    alt="Hand pleated silk drape" loading="lazy" />
                             </div>
                             <div class="bento-card__meta">
                                 <p class="bento-card__caption">MATERIAL LAB</p>
@@ -943,8 +943,8 @@ onBeforeUnmount(() => {
 
                         <article class="bento-card project-item">
                             <div class="bento-card__media" aria-hidden="true">
-                                <img src="https://images.unsplash.com/photo-1518544801958-efcbf8a7ec10?q=80&w=1200&auto=format&fit=crop"
-                                    alt="Pearl embroidery" loading="lazy" />
+                                <img src="https://images.unsplash.com/photo-1595777457583-95e059d581b8?q=80&w=800&auto=format&fit=crop"
+                                    alt="Pearl embroidery detail" loading="lazy" />
                             </div>
                             <div class="bento-card__meta">
                                 <p class="bento-card__caption">DETAIL</p>
