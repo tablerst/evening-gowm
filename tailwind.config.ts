@@ -5,33 +5,33 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        obsidian: '#050505',
-        surface: '#08140F',
-        emerald: '#043D2C',
-        'emerald-glow': '#056E41',
-        champagne: '#E8D6B3',
-        platinum: '#C0C0C0',
-        smoke: '#9AA3A1',
-        cinder: '#5E645F',
-        'accent-gold': '#D4AF37',
-        'accent-silver': '#E0E0E0',
-        'velvet-shadow': '#03110C',
+        atelier: '#F9F9F9',
+        silk: '#FFFFFF',
+        charcoal: '#1A1A1A',
+        stone: '#595959',
+        fog: '#8C8C8C',
+        'platinum-hairline': '#E5E5E5',
+        champagne: '#D4AF37',
+        vapor: 'rgba(255, 255, 255, 0.65)',
+        shimmer: '#FFF8E7',
+        'soft-shadow': 'rgba(200, 200, 200, 0.2)',
       },
       fontFamily: {
-        sans: ['Source Sans 3', 'Montserrat', 'sans-serif'],
-        serif: ['Cormorant Garamond', 'Playfair Display', 'serif'],
+        sans: ['Inter', 'Source Sans 3', 'sans-serif'],
+        serif: ['Playfair Display', 'Cormorant Garamond', 'serif'],
         display: ['Playfair Display', 'Cinzel', 'serif'],
       },
       letterSpacing: {
-        extra: '0.35em',
+        wide: '0.35em',
+        ultrawide: '0.5em',
       },
       transitionTimingFunction: {
         'expo-out': 'cubic-bezier(0.19, 1, 0.22, 1)',
         'silk-flow': 'cubic-bezier(0.6, 0, 0.4, 1)',
       },
-      backgroundImage: {
-        'velvet-radial':
-          'radial-gradient(circle at 30% 50%, rgba(5, 20, 15, 0.55), rgba(5, 5, 5, 0.95))',
+      boxShadow: {
+        levitation: '0 25px 60px rgba(210, 210, 210, 0.45)',
+        filament: 'inset 0 0 30px rgba(255, 255, 255, 0.35)',
       },
     },
   },

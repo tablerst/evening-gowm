@@ -60,12 +60,12 @@ let networkInfo: NetworkInformationLike | null = null
 let networkChangeHandler: (() => void) | null = null
 
 const targetConfig: Omit<RibbonRuntimeConfig, 'segments' | 'width' | 'length'> = {
-    speed: 0.4,
-    twistSpeed: 0.1,
-    twistAmplitude: 1.5,
-    flowFrequency: 0.8,
-    baseColor: new THREE.Color(0x04140f),
-    glowColor: new THREE.Color(0x0b5d3a),
+    speed: 0.18,
+    twistSpeed: 0.06,
+    twistAmplitude: 0.75,
+    flowFrequency: 0.45,
+    baseColor: new THREE.Color(0xf6f0e9),
+    glowColor: new THREE.Color(0xfdf8ec),
 }
 
 const syncMotionPreference = (shouldReduce: boolean) => {
@@ -115,15 +115,15 @@ const evaluateSilkFallback = () => {
 }
 
 const config: RibbonRuntimeConfig = {
-    segments: 400,
-    width: 5,
-    length: 30,
-    speed: 0.4,
-    twistSpeed: 0.1,
-    twistAmplitude: 1.5,
-    flowFrequency: 0.8,
-    baseColor: new THREE.Color(0x04140f),
-    glowColor: new THREE.Color(0x0b5d3a),
+    segments: 260,
+    width: 6,
+    length: 26,
+    speed: 0.16,
+    twistSpeed: 0.06,
+    twistAmplitude: 0.8,
+    flowFrequency: 0.5,
+    baseColor: new THREE.Color(0xfaf5eb),
+    glowColor: new THREE.Color(0xfdf8ec),
 }
 
 const initCursor = () => {
@@ -136,13 +136,16 @@ const initCursor = () => {
 
     const styles = getComputedStyle(document.documentElement)
     const accentGold = styles.getPropertyValue('--accent-gold').trim() || '#D4AF37'
-    const emeraldOverlay = 'rgba(5, 110, 65, 0.12)'
-    const emeraldIdle = 'rgba(4, 61, 44, 0.18)'
-    const idleBorder = 'rgba(232, 214, 179, 0.25)'
+    const veilGlow = 'rgba(255, 255, 255, 0.18)'
+    const highlightGlow = 'rgba(255, 255, 255, 0.35)'
+    const idleBorder = 'rgba(0, 0, 0, 0.18)'
+    const focusBorder = 'rgba(0, 0, 0, 0.35)'
 
     document.body.classList.add('has-custom-cursor')
     cursorDotRef.style.opacity = '1'
     cursorOutlineRef.style.opacity = '1'
+    cursorOutlineRef.style.borderColor = idleBorder
+    cursorOutlineRef.style.background = veilGlow
 
     moveHandler = (event: MouseEvent) => {
         const { clientX, clientY } = event
@@ -160,22 +163,26 @@ const initCursor = () => {
     window.addEventListener('mousemove', moveHandler)
 
     const interactiveElements = Array.from(
-        document.querySelectorAll<HTMLElement>('a, button, textarea, .project-item, .hero-cta span, .nav-link')
+        document.querySelectorAll<HTMLElement>(
+            'a, button, textarea, .project-item, .hero-cta button, .nav-link, .nav-ghost, .bento-card'
+        )
     )
 
     interactiveElements.forEach((element) => {
         const onEnter = () => {
             cursorOutlineRef!.style.width = '50px'
             cursorOutlineRef!.style.height = '50px'
-            cursorOutlineRef!.style.borderColor = accentGold
-            cursorOutlineRef!.style.background = emeraldOverlay
+            cursorOutlineRef!.style.borderColor = focusBorder
+            cursorOutlineRef!.style.background = highlightGlow
+            cursorOutlineRef!.style.boxShadow = `0 0 35px ${highlightGlow}`
         }
 
         const onLeave = () => {
             cursorOutlineRef!.style.width = '40px'
             cursorOutlineRef!.style.height = '40px'
             cursorOutlineRef!.style.borderColor = idleBorder
-            cursorOutlineRef!.style.background = emeraldIdle
+            cursorOutlineRef!.style.background = veilGlow
+            cursorOutlineRef!.style.boxShadow = `0 0 10px ${veilGlow}`
         }
 
         element.addEventListener('mouseenter', onEnter)
@@ -343,11 +350,14 @@ const initSilkCanvas = () => {
     silkMaterial = new THREE.MeshPhysicalMaterial({
         color: 0xffffff,
         vertexColors: true,
-        emissive: 0x050510,
-        metalness: 0.6,
-        roughness: 0.4,
-        clearcoat: 0.8,
-        clearcoatRoughness: 0.2,
+        emissive: 0xfaf3e2,
+        emissiveIntensity: 0.25,
+        metalness: 0.35,
+        roughness: 0.25,
+        clearcoat: 0.95,
+        clearcoatRoughness: 0.1,
+        transmission: 0.15,
+        thickness: 1.2,
         side: THREE.DoubleSide,
         flatShading: false,
     })
@@ -358,35 +368,35 @@ const initSilkCanvas = () => {
         if (!ribbonMesh) return
         const isMobile = window.innerWidth < 1024
         if (isMobile) {
-            ribbonMesh.rotation.z = Math.PI / 3
-            ribbonMesh.rotation.x = Math.PI / 4
-            ribbonMesh.position.set(0, 2, -5)
+            ribbonMesh.rotation.z = Math.PI / 5
+            ribbonMesh.rotation.x = Math.PI / 3
+            ribbonMesh.position.set(0, 1, -4)
         } else {
-            ribbonMesh.rotation.z = Math.PI / 2.2
-            ribbonMesh.rotation.x = Math.PI / 5
-            ribbonMesh.position.set(0, -2, 0)
+            ribbonMesh.rotation.z = Math.PI / 2.8
+            ribbonMesh.rotation.x = Math.PI / 4
+            ribbonMesh.position.set(0, -1, 2)
         }
     }
     updateMeshPosition()
     scene.add(ribbonMesh)
 
-    // 模拟月光环境
-    const ambientLight = new THREE.AmbientLight(0x1c392d, 0.8)
+    // 柔和顶光
+    const ambientLight = new THREE.AmbientLight(0xfdf8ef, 0.85)
     scene.add(ambientLight)
 
-    // 主轮廓光 - 增强高光
-    const mainLight = new THREE.DirectionalLight(0xf6e7c8, 3.0)
-    mainLight.position.set(10, 10, 10)
+    // 主轮廓光 - 暖调
+    const mainLight = new THREE.DirectionalLight(0xfff1dc, 2.2)
+    mainLight.position.set(12, 14, 8)
     scene.add(mainLight)
 
-    // 底部补光，增加层次
-    const fillLight = new THREE.DirectionalLight(0x0a3225, 1.5)
-    fillLight.position.set(-5, -10, 5)
+    // 冷色补光
+    const fillLight = new THREE.DirectionalLight(0xdfe9ff, 1.2)
+    fillLight.position.set(-6, -8, 4)
     scene.add(fillLight)
 
-    // 增加一个背光，勾勒边缘
-    const backLight = new THREE.SpotLight(0x0b5d3a, 5)
-    backLight.position.set(0, 10, -10)
+    // 背光提升质感
+    const backLight = new THREE.SpotLight(0xf3e6ff, 2.5)
+    backLight.position.set(0, 10, -6)
     backLight.lookAt(0, 0, 0)
     scene.add(backLight)
 
@@ -409,31 +419,29 @@ const initSilkCanvas = () => {
 
 const initAnimations = () => {
     ctx = gsap.context(() => {
-        const tl = gsap.timeline()
+        const tl = gsap.timeline({ defaults: { ease: 'power3.out' } })
 
-        tl.to('.hero-sub', {
-            opacity: 1,
-            y: 0,
-            duration: 1.5,
-            delay: 0.5,
-            ease: 'power3.out',
-        })
+        tl.fromTo(
+            '.hero-sub',
+            { y: 32, opacity: 0 },
+            { y: 0, opacity: 1, duration: 1.2, delay: 0.25 }
+        )
             .to(
                 '#hero-text-1',
                 {
                     opacity: 1,
                     y: 0,
-                    duration: 1.8,
-                    skewX: -15,
-                    ease: 'power4.out',
+                    duration: 1.4,
+                    skewX: -8,
+                    filter: 'blur(0px)',
                 },
-                '-=1'
+                '-=0.9'
             )
             .from(
                 '#hero-text-1',
                 {
-                    y: 120,
-                    filter: 'blur(15px)',
+                    y: 110,
+                    filter: 'blur(16px)',
                 },
                 '<'
             )
@@ -442,74 +450,90 @@ const initAnimations = () => {
                 {
                     opacity: 1,
                     y: 0,
-                    duration: 1.8,
-                    skewX: -15,
-                    ease: 'power4.out',
+                    duration: 1.4,
+                    skewX: -8,
+                    filter: 'blur(0px)',
                 },
-                '-=1.5'
+                '-=1.2'
             )
             .from(
                 '#hero-text-2',
                 {
-                    y: 160,
-                    filter: 'blur(15px)',
+                    y: 140,
+                    filter: 'blur(18px)',
                 },
                 '<'
             )
-            .to(
+            .from(
                 '.hero-cta',
                 {
-                    opacity: 1,
-                    y: 0,
+                    opacity: 0,
+                    y: 20,
+                    duration: 0.9,
+                },
+                '-=0.6'
+            )
+            .from(
+                '.hero-pill',
+                {
+                    opacity: 0,
+                    y: 24,
+                    stagger: 0.08,
+                    duration: 0.8,
+                },
+                '-=0.6'
+            )
+            .from(
+                '.hero-note',
+                {
+                    opacity: 0,
+                    y: 40,
                     duration: 1,
                 },
                 '-=0.5'
             )
-            .to(
-                '.hero-deco',
-                {
-                    opacity: 1,
-                    duration: 1,
-                },
-                '<'
-            )
 
-        gsap.to('#hero-bg', {
+        gsap.to('.hero-backdrop__grid', {
             scrollTrigger: {
                 trigger: 'header',
                 start: 'top top',
                 end: 'bottom top',
                 scrub: true,
             },
-            yPercent: 15,
-            scale: 1.05,
+            yPercent: 18,
+            scale: 1.08,
         })
 
-        const items = document.querySelectorAll<HTMLElement>('.project-item')
-        items.forEach((item, index) => {
+        gsap.utils.toArray<HTMLElement>('.project-item').forEach((item) => {
             gsap.from(item, {
                 scrollTrigger: {
                     trigger: item,
                     start: 'top 90%',
                     toggleActions: 'play none none reverse',
                 },
-                y: 80,
+                y: 70,
                 opacity: 0,
-                duration: 1.5,
+                duration: 1.2,
                 ease: 'power2.out',
-                delay: index * 0.15,
             })
         })
 
-        gsap.to('.project-text-reveal', {
-            scrollTrigger: {
-                trigger: '.project-text-reveal',
-                start: 'top 75%',
-            },
-            opacity: 1,
-            letterSpacing: '0.15em',
-            duration: 2.5,
-            ease: 'power2.out',
+        gsap.utils.toArray<HTMLElement>('.project-text-reveal').forEach((el) => {
+            gsap.fromTo(
+                el,
+                { opacity: 0, letterSpacing: '0.4em' },
+                {
+                    opacity: 1,
+                    letterSpacing: '0.15em',
+                    duration: 1.4,
+                    ease: 'power2.out',
+                    scrollTrigger: {
+                        trigger: el,
+                        start: 'top 80%',
+                        toggleActions: 'play none none reverse',
+                    },
+                }
+            )
         })
     })
 }
@@ -547,7 +571,7 @@ onMounted(() => {
 
     if (typeof window !== 'undefined') {
         scrollHandler = () => {
-            isNavCompacted.value = window.scrollY > 40
+            isNavCompacted.value = window.scrollY > 30
         }
         window.addEventListener('scroll', scrollHandler, { passive: true })
     }
@@ -596,268 +620,265 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-    <div class="min-h-screen bg-obsidian text-platinum">
+    <div class="site-root min-h-screen bg-atelier text-charcoal">
         <div class="cursor-dot" aria-hidden="true"></div>
         <div class="cursor-outline" aria-hidden="true"></div>
 
         <nav :class="[
-            'nav-glass fixed top-0 w-full z-50 px-6 md:px-12 flex justify-between items-center transition-all duration-500',
-            isNavCompacted ? 'py-3 nav-glass--compact' : 'py-5'
+            'lens-nav fixed top-0 w-full z-50 px-6 md:px-10 flex justify-between items-center transition-all duration-300',
+            isNavCompacted ? 'py-3 lens-nav--compact' : 'py-5'
         ]">
-            <div
-                class="text-lg md:text-xl font-serif text-champagne tracking-[0.25em] font-bold flex items-center gap-3 nav-link">
-                <span class="text-accent-gold text-base">✦</span>
+            <div class="lens-nav__brand nav-link">
                 NOIR & ÉCLAT
+                <span>WHITE PHANTOM</span>
             </div>
-            <div class="hidden md:flex space-x-10 text-[11px] tracking-[0.35em] text-muted">
-                <a href="#featured" class="hover:text-champagne transition-colors duration-300 nav-link">COLLECTIONS</a>
-                <a href="#best" class="hover:text-champagne transition-colors duration-300 nav-link">BEST SELLERS</a>
-                <a href="#couture" class="hover:text-champagne transition-colors duration-300 nav-link">COUTURE</a>
-                <a href="#contact" class="hover:text-champagne transition-colors duration-300 nav-link">CONTACT</a>
+            <div class="lens-nav__links">
+                <a href="#gallery" class="nav-link">Gallery</a>
+                <a href="#atelier" class="nav-link">Atelier</a>
+                <a href="#couture" class="nav-link">Couture</a>
+                <a href="#contact" class="nav-link">Contact</a>
             </div>
-            <button
-                class="nav-cta border border-accent-gold text-accent-gold px-5 md:px-7 py-2 text-[10px] tracking-[0.35em] uppercase hover:bg-accent-gold hover:text-obsidian transition-all duration-500 nav-link">
-                PRIVATE VIEWING
-            </button>
+            <button class="nav-ghost nav-link" type="button">预约私享厅</button>
         </nav>
 
-        <header class="hero-section relative overflow-hidden bg-surface" aria-labelledby="hero-title">
+        <header class="hero-section pt-28 md:pt-32 relative overflow-hidden" aria-labelledby="hero-title">
             <div class="hero-backdrop absolute inset-0" id="hero-bg" aria-hidden="true">
-                <div class="hero-backdrop__veil"></div>
-                <div class="hero-backdrop__gradient"></div>
-                <div class="hero-backdrop__halo hero-deco"></div>
+                <div class="hero-backdrop__wash hero-deco"></div>
                 <div class="hero-backdrop__grid hero-deco"></div>
-                <div class="hero-backdrop__noise"></div>
+                <div class="hero-backdrop__halo hero-deco"></div>
             </div>
 
             <div class="hero-shell page-shell">
-                <div class="hero-grid relative z-10 grid gap-6 lg:gap-16 items-center min-h-[80vh]">
-                    <div class="hero-left relative z-20 col-span-12 lg:col-span-7 xl:col-span-6 w-full">
-                        <div class="hero-left__veil" aria-hidden="true"></div>
-                        <div class="hero-ambient hero-deco" aria-hidden="true"></div>
-                        <div class="hero-axis hero-deco" aria-hidden="true">
-                            <span class="hero-axis__label">EMERALD TRAJECTORY</span>
-                            <div class="hero-axis__line">
-                                <div class="hero-axis__marker">
-                                    <span class="hero-axis__dot"></span>
-                                    <div>
-                                        <p class="hero-axis__caption">Atelier</p>
-                                        <p class="hero-axis__meta">Pattern sketch · 72h</p>
-                                    </div>
-                                </div>
-                                <div class="hero-axis__marker">
-                                    <span class="hero-axis__dot"></span>
-                                    <div>
-                                        <p class="hero-axis__caption">Fitting</p>
-                                        <p class="hero-axis__meta">Velvet draping · 3 sessions</p>
-                                    </div>
-                                </div>
-                                <div class="hero-axis__marker">
-                                    <span class="hero-axis__dot"></span>
-                                    <div>
-                                        <p class="hero-axis__caption">Soirée</p>
-                                        <p class="hero-axis__meta">Grand reveal · 900h</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <p class="hero-eyebrow hero-sub opacity-0">
-                            THE COLLECTION · <span class="text-accent-gold">THE EMERALD NIGHT</span>
+                <div class="hero-grid">
+                    <div class="hero-left">
+                        <p class="hero-sub eyebrow opacity-0 translate-y-4">
+                            THE GALLERY · WHITE PHANTOM
                         </p>
                         <h1 class="hero-title" id="hero-title">
-                            <span id="hero-text-1">OBSIDIAN</span>
-                            <span id="hero-text-2">DREAMS</span>
+                            <span id="hero-text-1">WHITE</span>
+                            <span id="hero-text-2">PHANTOM</span>
                         </h1>
-                        <p class="hero-lede text-body-copy">
-                            黑曜石般的背景衬托祖母绿的丝绸流光，
-                            低声讲述 Atelier 手工缝制的仪式感。14 道工序、900 小时，让夜色在你指尖流动。
+                        <p class="hero-lede">
+                            以白中之白的光感重塑晚礼服展厅：玻璃雾面、珠光丝绸与线性 UI
+                            律动交织，宛如步入被自然光包裹的 Vernissage 预展。
+                            每一次滚动，都解锁不同材质的光亮与肌理。
                         </p>
-                        <div class="hero-cta flex flex-col sm:flex-row gap-4 mt-12 opacity-0 w-full sm:w-auto">
-                            <button
-                                class="hero-button hero-button--primary nav-link w-full sm:w-auto flex justify-center items-center"
-                                type="button">
-                                探索系列
+                        <div class="hero-cta opacity-0">
+                            <button class="hero-button hero-button--primary nav-link" type="button">
+                                预约预展
                             </button>
-                            <button
-                                class="hero-button hero-button--secondary nav-link w-full sm:w-auto flex justify-center items-center"
-                                type="button">
-                                预约试穿
+                            <button class="hero-button hero-button--secondary nav-link" type="button">
+                                下载 Lookbook
                             </button>
                         </div>
                         <div class="hero-pill-group">
                             <div class="hero-pill">
-                                <span class="hero-pill__label">COUTURE SALON</span>
-                                <span class="hero-pill__value">14 ateliers worldwide</span>
+                                <span class="hero-pill__label">atelier cadence</span>
+                                <span class="hero-pill__value">900 小时 / 礼服</span>
                             </div>
                             <div class="hero-pill">
-                                <span class="hero-pill__label">HAND-CRAFTED</span>
-                                <span class="hero-pill__value">900 hours / gown</span>
+                                <span class="hero-pill__label">materials</span>
+                                <span class="hero-pill__value">塔夫绸 · 真丝欧根纱</span>
+                            </div>
+                            <div class="hero-pill">
+                                <span class="hero-pill__label">global salons</span>
+                                <span class="hero-pill__value">14 城巡回</span>
                             </div>
                         </div>
                     </div>
 
-                    <!-- 空白过渡区，留给丝绸流动 -->
-                    <div class="hidden lg:block lg:col-span-1"></div>
-
-                    <div
-                        class="hero-right absolute inset-0 z-0 lg:static lg:col-span-4 xl:col-span-5 lg:relative lg:h-full lg:min-h-[50vh]">
-                        <div class="hero-silk-shell" aria-hidden="true">
-                            <div ref="silkContainer" class="hero-silk-canvas"></div>
-                            <div class="hero-silk-fallback" v-if="isReducedMotion || shouldUseStaticSilk">
-                                <div class="hero-silk-fallback__glow"></div>
+                    <div class="hero-right">
+                        <div class="hero-note project-item">
+                            <div class="hero-note__badge">THE GALLERY</div>
+                            <p>
+                                通过 Three.js 绘制的白色丝绸在视野中缓慢弯折，模仿厚重面料的
+                                菲涅尔色移。GSAP 则负责文字与微交互动效，让 Linear 风格的界面更
+                                像一场展览流程表。
+                            </p>
+                            <div class="hero-note__meta">
+                                <span>VOLUME II</span>
+                                <span>WHITE PHANTOM</span>
+                                <span>2025</span>
                             </div>
                         </div>
-                        <div class="hero-right__caption absolute bottom-0 right-0 left-0">
-                            <span>VOL. II · EMERALD NIGHT</span>
-                            <span>Scroll</span>
+                        <div class="hero-visual relative mt-10 lg:mt-12 min-h-[320px] lg:min-h-[520px]">
+                            <div class="hero-silk-shell" aria-hidden="true">
+                                <div ref="silkContainer" class="hero-silk-canvas"></div>
+                                <div class="hero-silk-fallback" v-if="isReducedMotion || shouldUseStaticSilk">
+                                    <div class="hero-silk-fallback__glow"></div>
+                                </div>
+                            </div>
+                            <div class="hero-scroll project-text-reveal">
+                                <span>Scroll</span>
+                                <span>White Phantom</span>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
         </header>
 
-        <main class="bg-obsidian">
-            <section id="featured" class="section-block">
+        <main class="bg-atelier">
+            <section id="gallery" class="section-block gallery-section">
                 <div class="page-shell">
                     <div class="section-heading">
-                        <div class="section-heading__line"></div>
                         <div>
-                            <p class="eyebrow">FEATURED COLLECTION</p>
-                            <h2>精选系列 · Emerald Reverie</h2>
+                            <p class="eyebrow">THE GALLERY</p>
+                            <h2 class="text-2xl md:text-4xl font-serif">Vernissage · 白晕展柜</h2>
                         </div>
                         <p class="section-heading__lede">
-                            12 列栅格下的丝绒留白，让礼服成为空间主角。
-                            每张卡片都以 3:4 比例呈现裙摆垂坠感。
+                            非对称 Bento Grid 将礼服、高定配饰与材质特写拆分展示。
+                            每张卡片以 1px 线性边框悬浮在“工坊迷雾”上，呈现高调摄影的高光。
                         </p>
                     </div>
 
-                    <div class="collection-grid">
-                        <article class="collection-card project-item">
-                            <div class="collection-card__media">
-                                <img src="https://images.unsplash.com/photo-1595777457583-95e059d581b8?q=80&w=1983&auto=format&fit=crop"
-                                    alt="Moonlit Velvet" loading="lazy" />
+                    <div class="bento-grid">
+                        <article class="bento-card bento-card--xl project-item">
+                            <div class="bento-card__media" aria-hidden="true">
+                                <img
+                                    src="https://images.unsplash.com/photo-1524504388940-b1c1722653e1?q=80&w=1980&auto=format&fit=crop"
+                                    alt="Architected halo gown" loading="lazy" />
                             </div>
-                            <div class="collection-card__content">
-                                <h3>Moonlit Velvet</h3>
-                                <p>Silver Thread Atelier · 900 Hours</p>
-                            </div>
-                        </article>
-
-                        <article class="collection-card project-item">
-                            <div class="collection-card__media">
-                                <img src="https://images.unsplash.com/photo-1566174053879-31528523f8ae?q=80&w=1983&auto=format&fit=crop"
-                                    alt="Nebula Gown" loading="lazy" />
-                            </div>
-                            <div class="collection-card__content">
-                                <h3>Nebula Gown</h3>
-                                <p>Deep Purple Chiffon · Atelier 04</p>
+                            <div class="bento-card__meta">
+                                <p class="bento-card__caption">LOOK 01 · STRUCTURE</p>
+                                <h3 class="bento-card__title">Architected Halo</h3>
+                                <p class="bento-card__caption">3D Corsetry · Hidden boning</p>
                             </div>
                         </article>
 
-                        <article class="collection-card collection-card--highlight project-item">
-                            <div class="collection-card__media">
-                                <img src="https://images.unsplash.com/photo-1539008835657-9e8e9680c956?q=80&w=1887&auto=format&fit=crop"
-                                    alt="Ethereal" loading="lazy" />
-                                <div class="collection-card__overlay">
-                                    <span class="eyebrow">ETHEREAL</span>
-                                </div>
+                        <article class="bento-card bento-card--tall project-item">
+                            <div class="bento-card__media" aria-hidden="true">
+                                <img
+                                    src="https://images.unsplash.com/photo-1429257413823-8a01dd0e9701?q=80&w=1200&auto=format&fit=crop"
+                                    alt="Hand pleated silk" loading="lazy" />
                             </div>
-                            <div class="collection-card__content">
-                                <h3>The Royal Silhouette</h3>
-                                <p>Obsidian Tulle · Limited 12</p>
-                                <button class="tag-chip nav-link" type="button">INQUIRE</button>
-                            </div>
-                        </article>
-                    </div>
-                </div>
-            </section>
-
-            <section id="best" class="section-block section-block--dense">
-                <div class="page-shell">
-                    <div class="section-heading section-heading--compact">
-                        <p class="eyebrow">BEST SELLERS</p>
-                        <h2>热门单品 · Best Sellers</h2>
-                    </div>
-                    <div class="best-grid">
-                        <article class="best-card">
-                            <div class="best-card__media">
-                                <img src="https://images.unsplash.com/photo-1514996937319-344454492b37?q=80&w=900&auto=format&fit=crop"
-                                    alt="Asteria" loading="lazy" />
-                            </div>
-                            <div class="best-card__body">
-                                <div>
-                                    <h3>Asteria Veil</h3>
-                                    <p>Hand-beaded constellation lace</p>
-                                </div>
-                                <div class="best-card__footer">
-                                    <span class="price">¥ 128,000</span>
-                                    <button class="hero-button hero-button--ghost nav-link" type="button">加入心愿单</button>
-                                </div>
+                            <div class="bento-card__meta">
+                                <p class="bento-card__caption">MATERIAL LAB</p>
+                                <h3 class="bento-card__title">Hand Pleated Silk</h3>
+                                <p class="bento-card__caption">Perforated voile</p>
                             </div>
                         </article>
 
-                        <article class="best-card">
-                            <div class="best-card__media">
-                                <img src="https://images.unsplash.com/photo-1475180098004-ca77a66827be?q=80&w=900&auto=format&fit=crop"
-                                    alt="Seraphine" loading="lazy" />
-                            </div>
-                            <div class="best-card__body">
-                                <div>
-                                    <h3>Seraphine Column</h3>
-                                    <p>Bias-cut satin · Atelier Milano</p>
-                                </div>
-                                <div class="best-card__footer">
-                                    <span class="price">¥ 96,000</span>
-                                    <button class="hero-button hero-button--ghost nav-link" type="button">预约试穿</button>
-                                </div>
+                        <article class="bento-card bento-card--wide project-item">
+                            <div class="bento-card__meta">
+                                <p class="bento-card__caption">VERNISSAGE NOTES</p>
+                                <h3 class="bento-card__title">Gallery Flow</h3>
+                                <p class="text-sm text-stone leading-relaxed">
+                                    入口即见中央主礼服，右侧为材质试验室，左翼陈列编辑精选 Lookbook。
+                                    全场音景与灯光均以 72 分贝以内的呼吸节奏铺陈。
+                                </p>
+                                <span class="bento-card__tag nav-link">LINEAR LUXURY</span>
                             </div>
                         </article>
 
-                        <article class="best-card">
-                            <div class="best-card__media">
-                                <img src="https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?q=80&w=900&auto=format&fit=crop"
-                                    alt="Nocturne" loading="lazy" />
+                        <article class="bento-card project-item">
+                            <div class="bento-card__media" aria-hidden="true">
+                                <img
+                                    src="https://images.unsplash.com/photo-1518544801958-efcbf8a7ec10?q=80&w=1200&auto=format&fit=crop"
+                                    alt="Pearl embroidery" loading="lazy" />
                             </div>
-                            <div class="best-card__body">
-                                <div>
-                                    <h3>Nocturne Cape</h3>
-                                    <p>Velvet gradient · Detachable cape</p>
-                                </div>
-                                <div class="best-card__footer">
-                                    <span class="price">¥ 138,000</span>
-                                    <button class="hero-button hero-button--ghost nav-link" type="button">查看细节</button>
-                                </div>
+                            <div class="bento-card__meta">
+                                <p class="bento-card__caption">DETAIL</p>
+                                <h3 class="bento-card__title">Paillette Clouds</h3>
                             </div>
                         </article>
                     </div>
                 </div>
             </section>
 
-            <section id="couture" class="section-block section-couture">
+            <section id="atelier" class="section-block atelier-section">
                 <div class="page-shell">
                     <div class="section-heading">
-                        <div class="section-heading__line"></div>
                         <div>
-                            <p class="eyebrow">COUTURE & CUSTOM</p>
-                            <h2>定制服务 · Couture & Custom</h2>
+                            <p class="eyebrow">THE ATELIER</p>
+                            <h2 class="text-2xl md:text-4xl font-serif">工坊流程 · Linear Precision</h2>
+                        </div>
+                        <p class="section-heading__lede">
+                            以界面化的方式呈现高定流程，让客户像阅读产品规格一样理解面料克重、缝制工序与排期。
+                        </p>
+                    </div>
+
+                    <div class="atelier-grid">
+                        <article class="atelier-panel project-item">
+                            <h3 class="text-xl font-serif mb-6">Routine Timeline</h3>
+                            <ul class="atelier-list">
+                                <li>
+                                    <strong>DAY 01 · PATTERN SKETCH</strong>
+                                    <span>72h 线稿与立体裁剪，使用透明塔夫绸校准版型</span>
+                                </li>
+                                <li>
+                                    <strong>DAY 04 · MATERIAL CURATION</strong>
+                                    <span>香槟白塔夫绸 × 雾面珠光纱，记录温湿度与肌理</span>
+                                </li>
+                                <li>
+                                    <strong>DAY 09 · FITTING</strong>
+                                    <span>三轮试衣 + 激光刺绣定位，保留每次调整的 Data Log</span>
+                                </li>
+                            </ul>
+                            <div class="atelier-meta">
+                                <div class="atelier-meta__item">透光测试</div>
+                                <div class="atelier-meta__item">香调匹配</div>
+                                <div class="atelier-meta__item">触感档案</div>
+                            </div>
+                        </article>
+
+                        <article class="atelier-panel project-item">
+                            <h3 class="text-xl font-serif mb-4">Material Lab</h3>
+                            <p class="text-sm text-stone leading-relaxed">
+                                采用高调摄影的曝光策略记录每次用料，
+                                并以数字孪生方式同步到 WebGL 丝绸的着色器参数，确保线上线下色温一致。
+                            </p>
+                            <div class="hero-pill-group mt-6">
+                                <div class="hero-pill">
+                                    <span class="hero-pill__label">reflectance</span>
+                                    <span class="hero-pill__value">0.78 · pearl</span>
+                                </div>
+                                <div class="hero-pill">
+                                    <span class="hero-pill__label">roughness</span>
+                                    <span class="hero-pill__value">0.32 · satin</span>
+                                </div>
+                            </div>
+                            <div class="hero-pill-group mt-4">
+                                <div class="hero-pill">
+                                    <span class="hero-pill__label">color drift</span>
+                                    <span class="hero-pill__value">冷白 ↔ 暖金</span>
+                                </div>
+                                <div class="hero-pill">
+                                    <span class="hero-pill__label">wind profile</span>
+                                    <span class="hero-pill__value">Perlin 0.6</span>
+                                </div>
+                            </div>
+                        </article>
+                    </div>
+                </div>
+            </section>
+
+            <section id="couture" class="section-block couture-section">
+                <div class="page-shell">
+                    <div class="section-heading">
+                        <div>
+                            <p class="eyebrow">COUTURE &amp; CUSTOM</p>
+                            <h2 class="text-2xl md:text-4xl font-serif">预约 White Phantom 试穿</h2>
                         </div>
                     </div>
                     <div class="couture-grid">
-                        <div class="couture-text">
+                        <div class="couture-text project-text-reveal">
                             <p>
-                                Atelier 团队根据体温、肤色与出席场合定制配色，
-                                每次量体都在玻璃拟态的静谧空间完成。
+                                每一次量体都在磨砂玻璃围合的静谧空间进行，Ambient 光模拟拂晓日光。
+                                造型顾问会根据肤色与场合输出 Look Sheet，并同步香氛气味与面料纹理档案。
                             </p>
                             <ul>
-                                <li>一对一造型顾问 · 线下 / 远程</li>
-                                <li>丝绒面料触感档案 &amp; 香氛礼包</li>
-                                <li>72 小时出具草图，14 天完成初版试衣</li>
+                                <li>远程体感会议 · 45 分钟</li>
+                                <li>面料触感档案 + 香氛礼包寄送</li>
+                                <li>72 小时内交付草图，14 天完成首版试衣</li>
                             </ul>
                         </div>
-                        <div class="couture-panel" id="contact">
+                        <div class="couture-panel project-item" id="contact">
                             <div class="couture-panel__badge">By Appointment Only</div>
-                            <h3>预约专属试穿</h3>
-                            <p>留下你的城市与日期，我们将安排最近的 Emerald Night Salon。</p>
+                            <h3 class="text-xl font-serif mb-3">预约专属试穿</h3>
+                            <p class="text-sm text-stone leading-relaxed">
+                                告诉我们你的城市与理想日期，Atelier 将为你安排最近的 White Phantom Salon。
+                            </p>
                             <form class="couture-form" aria-label="预约试穿">
                                 <label>
                                     <span>城市</span>
@@ -880,12 +901,12 @@ onBeforeUnmount(() => {
         <footer class="site-footer">
             <div class="site-footer__glow" aria-hidden="true"></div>
             <p class="eyebrow">BY APPOINTMENT ONLY</p>
-            <h2 class="skew-title text-4xl md:text-6xl">YOUR LEGACY</h2>
-            <div class="site-footer__links">
+            <h2 class="text-3xl md:text-5xl font-serif tracking-[0.3em] mt-4">WHITE PHANTOM</h2>
+            <div class="site-footer__links mt-6">
                 <a href="#" class="nav-link">Instagram</a>
-                <span class="text-accent-gold">•</span>
+                <span>•</span>
                 <a href="#" class="nav-link">WeChat</a>
-                <span class="text-accent-gold">•</span>
+                <span>•</span>
                 <a href="#" class="nav-link">Email</a>
             </div>
             <p class="site-footer__legal">© 2025 NOIR & ÉCLAT · PARIS / SHANGHAI</p>
