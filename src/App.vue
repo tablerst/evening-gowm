@@ -58,7 +58,7 @@ let motionQuery: MediaQueryList | null = null
 let motionChangeHandler: ((event: MediaQueryListEvent) => void) | null = null
 let networkInfo: NetworkInformationLike | null = null
 let networkChangeHandler: (() => void) | null = null
-let silkPointerHandler: ((event: PointerEvent) => void) | null = null
+let lastFrameTime = 0
 
 const heroScrollProgress = {
     target: 0,
@@ -72,8 +72,31 @@ const pointerInfluence = {
     currentY: 0,
 }
 
-const silkBasePosition = new THREE.Vector3(0, -1, 2)
+const breezeState = {
+    phaseX: Math.random() * Math.PI * 2,
+    phaseY: Math.random() * Math.PI * 2,
+    driftX: THREE.MathUtils.randFloatSpread(0.6),
+    driftY: THREE.MathUtils.randFloatSpread(0.6),
+    gustDuration: 0,
+    gustElapsed: 0,
+    gustStrength: 0,
+    timeUntilNextGust: 3 + Math.random() * 3,
+}
+
+const resetBreezeState = () => {
+    breezeState.phaseX = Math.random() * Math.PI * 2
+    breezeState.phaseY = Math.random() * Math.PI * 2
+    breezeState.driftX = THREE.MathUtils.randFloatSpread(0.6)
+    breezeState.driftY = THREE.MathUtils.randFloatSpread(0.6)
+    breezeState.gustDuration = 0
+    breezeState.gustElapsed = 0
+    breezeState.gustStrength = 0
+    breezeState.timeUntilNextGust = 3 + Math.random() * 3
+}
+
+const silkBasePosition = new THREE.Vector3(-2, -5, -2)
 const silkBaseRotation = { x: Math.PI / 4, y: 0, z: Math.PI / 2.8 }
+const silkVerticalSpin = THREE.MathUtils.degToRad(0)
 
 const baseSilkColor = new THREE.Color(0xf6f0e9)
 const highlightSilkColor = new THREE.Color(0xfdfaf2)
@@ -81,22 +104,49 @@ const baseGlowColor = new THREE.Color(0xfdf3e3)
 const accentGlowColor = new THREE.Color(0xfff2d6)
 
 const targetConfig: Omit<RibbonRuntimeConfig, 'segments' | 'width' | 'length'> = {
-    speed: 0.18,
-    twistSpeed: 0.06,
-    twistAmplitude: 0.75,
-    flowFrequency: 0.45,
+    speed: 0.12,
+    twistSpeed: 0.05,
+    twistAmplitude: 0.65,
+    flowFrequency: 0.34,
     baseColor: baseSilkColor.clone(),
     glowColor: baseGlowColor.clone(),
 }
 
-const updatePointerTargets = (clientX: number, clientY: number) => {
-    if (typeof window === 'undefined') {
-        return
+const applyAutonomousBreeze = (delta: number) => {
+    // 轻缓主波
+    breezeState.phaseX += delta * 0.32
+    breezeState.phaseY += delta * 0.26
+
+    // 清风突起的节奏
+    breezeState.timeUntilNextGust -= delta
+    if (breezeState.timeUntilNextGust <= 0) {
+        breezeState.gustDuration = 2.2 + Math.random() * 1.8
+        breezeState.gustElapsed = 0
+        breezeState.gustStrength = 0.18 + Math.random() * 0.35
+        breezeState.timeUntilNextGust = 4.5 + Math.random() * 3.5
+        breezeState.driftX = THREE.MathUtils.randFloatSpread(0.7)
+        breezeState.driftY = THREE.MathUtils.randFloatSpread(0.7)
     }
-    const width = window.innerWidth || 1
-    const height = window.innerHeight || 1
-    pointerInfluence.targetX = THREE.MathUtils.clamp((clientX / width) * 2 - 1, -1, 1)
-    pointerInfluence.targetY = THREE.MathUtils.clamp((clientY / height) * 2 - 1, -1, 1)
+
+    if (breezeState.gustElapsed < breezeState.gustDuration) {
+        breezeState.gustElapsed += delta
+    }
+
+    const gustProgress = breezeState.gustDuration
+        ? Math.min(breezeState.gustElapsed / breezeState.gustDuration, 1)
+        : 0
+    const gustEnvelope = Math.sin(gustProgress * Math.PI) * breezeState.gustStrength
+
+    const baseX = Math.sin(breezeState.phaseX) * 0.48
+    const layeredX = Math.sin(breezeState.phaseX * 0.55 + 1.4) * 0.22
+    const baseY = Math.cos(breezeState.phaseY) * 0.35
+    const layeredY = Math.sin(breezeState.phaseY * 0.38 - 0.8) * 0.18
+
+    const targetX = baseX + layeredX + gustEnvelope * 0.55 + breezeState.driftX * 0.35
+    const targetY = baseY + layeredY + gustEnvelope * 0.8 + breezeState.driftY * 0.45
+
+    pointerInfluence.targetX = THREE.MathUtils.clamp(targetX, -1, 1)
+    pointerInfluence.targetY = THREE.MathUtils.clamp(targetY, -1, 1)
 }
 
 const syncMotionPreference = (shouldReduce: boolean) => {
@@ -148,11 +198,11 @@ const evaluateSilkFallback = () => {
 const config: RibbonRuntimeConfig = {
     segments: 260,
     width: 6,
-    length: 26,
-    speed: 0.16,
-    twistSpeed: 0.06,
-    twistAmplitude: 0.8,
-    flowFrequency: 0.5,
+    length: 32,
+    speed: 0.11,
+    twistSpeed: 0.05,
+    twistAmplitude: 0.72,
+    flowFrequency: 0.38,
     baseColor: baseSilkColor.clone(),
     glowColor: baseGlowColor.clone(),
 }
@@ -250,27 +300,34 @@ const updateRibbon = () => {
     const pointerEnergy = 1 + Math.min(Math.hypot(pointerInfluence.currentX, pointerInfluence.currentY), 1) * 0.65
     const scrollEnvelope = 0.4 + heroScrollProgress.current * 0.9
 
+    const travel = time * 1.35
+    const breathing = Math.sin(time * 0.35) * 0.3
+
     for (let col = 0; col < verticesPerRow; col += 1) {
         const ratio = col / widthSegments
         const x = ratio * config.length - config.length / 2
+        const flowPhase = ratio * (Math.PI * 2) * config.flowFrequency - travel
+        const crossPhase = ratio * 10 - time * 0.65
 
-        // 基础波浪 - 更平滑的 S 形
-        let waveZ = Math.sin(x * 0.35 + time * 0.8) * (1.6 + scrollEnvelope * 1.1)
-        waveZ += Math.sin(x * 1.1 - time * 0.6) * 0.55 * pointerEnergy
+        const breezePush = pointerInfluence.currentX * 0.75
+        const lift = pointerInfluence.currentY * 0.9
 
-        // 中心线 Y 偏移 - 模拟飘动
-        const centerY = Math.sin(x * 0.18 + time * 0.35) * (1.2 + scrollEnvelope * 0.5)
+        let waveZ = Math.sin(flowPhase) * (1 + scrollEnvelope * 0.8)
+        waveZ += Math.sin(flowPhase * 1.5 - time * 0.4) * (0.3 + scrollEnvelope * 0.18) * (0.5 + pointerEnergy * 0.4)
+        waveZ += Math.sin(crossPhase) * (0.2 + scrollEnvelope * 0.12)
+        waveZ += breezePush * 0.55
+        waveZ += breathing * 0.18
 
-        // 扭曲角度 - 更加柔和
-        const twist = Math.sin(x * 0.22 + time * config.twistSpeed) * config.twistAmplitude
+        const meander = Math.sin(flowPhase * 0.32 - time * 0.18) * 0.35
+        const centerY = Math.cos(flowPhase * 0.64 + crossPhase * 0.2) * (0.9 + scrollEnvelope * 0.45) + meander + lift * 0.85
 
-        // 颜色计算因子
-        const flowPhase = ratio * 4 * config.flowFrequency - time * 1.5 + pointerInfluence.currentX * 0.65
-        let glowFactor = Math.sin(flowPhase)
-        glowFactor = Math.pow((glowFactor + 1) / 2, 6) // 锐化高光
+        const twistEnvelope = 0.65 + scrollEnvelope * 0.5
+        const twist = Math.sin(flowPhase * 0.9 + crossPhase * 0.4) * config.twistAmplitude * twistEnvelope * (0.8 + pointerEnergy * 0.2)
 
-        const twistHighlight = Math.abs(Math.sin(twist + time * 0.5))
-        const mixRatio = Math.min(glowFactor * 1.2 + twistHighlight * 0.3, 1)
+        const glowSweep = 0.5 + 0.5 * Math.sin(flowPhase + pointerInfluence.currentX * 0.5)
+        const highlight = Math.pow(glowSweep, 4) * (0.6 + pointerEnergy * 0.4)
+        const crossHighlight = Math.max(Math.cos(flowPhase * 0.5 - time * 0.6), 0)
+        const mixRatio = Math.min(highlight + Math.pow(crossHighlight, 3) * 0.7, 1)
 
         const r = baseR + (glowR - baseR) * mixRatio
         const g = baseG + (glowG - baseG) * mixRatio
@@ -306,6 +363,13 @@ const updateRibbon = () => {
 const animateSilk = () => {
     animationFrameId = requestAnimationFrame(animateSilk)
 
+    const now = typeof performance !== 'undefined' ? performance.now() : Date.now()
+    const deltaMs = lastFrameTime === 0 ? 16 : now - lastFrameTime
+    const deltaSeconds = Math.min(deltaMs, 48) / 1000
+    lastFrameTime = now
+
+    applyAutonomousBreeze(deltaSeconds)
+
     pointerInfluence.currentX += (pointerInfluence.targetX - pointerInfluence.currentX) * 0.04
     pointerInfluence.currentY += (pointerInfluence.targetY - pointerInfluence.currentY) * 0.05
     heroScrollProgress.current += (heroScrollProgress.target - heroScrollProgress.current) * 0.08
@@ -314,10 +378,10 @@ const animateSilk = () => {
     const scrollEnergy = heroScrollProgress.current
     const energyMix = Math.min(pointerEnergy * 0.6 + scrollEnergy * 0.8, 1)
 
-    targetConfig.speed = 0.18 + scrollEnergy * 0.12
-    targetConfig.twistSpeed = 0.05 + pointerEnergy * 0.04
-    targetConfig.twistAmplitude = 0.65 + scrollEnergy * 0.4 + pointerEnergy * 0.2
-    targetConfig.flowFrequency = 0.4 + scrollEnergy * 0.35
+    targetConfig.speed = 0.11 + scrollEnergy * 0.08
+    targetConfig.twistSpeed = 0.04 + pointerEnergy * 0.03
+    targetConfig.twistAmplitude = 0.6 + scrollEnergy * 0.28 + pointerEnergy * 0.15
+    targetConfig.flowFrequency = 0.32 + scrollEnergy * 0.24
     targetConfig.baseColor.copy(baseSilkColor).lerp(highlightSilkColor, energyMix * 0.6)
     targetConfig.glowColor.copy(baseGlowColor).lerp(accentGlowColor, 0.35 + energyMix * 0.4)
 
@@ -328,7 +392,8 @@ const animateSilk = () => {
     config.baseColor.lerp(targetConfig.baseColor, 0.05)
     config.glowColor.lerp(targetConfig.glowColor, 0.05)
 
-    time += 0.01 * config.speed
+    const flowTimeScale = 0.5 + config.speed * 2.4
+    time += deltaSeconds * flowTimeScale
     updateRibbon()
 
     if (camera) {
@@ -344,7 +409,7 @@ const animateSilk = () => {
         ribbonMesh.rotation.y = silkBaseRotation.y + pointerInfluence.currentX * 0.08
         ribbonMesh.rotation.z = silkBaseRotation.z + pointerInfluence.currentX * 0.05
         ribbonMesh.position.x = silkBasePosition.x + pointerInfluence.currentX * 0.85
-        ribbonMesh.position.y = silkBasePosition.y + pointerInfluence.currentY * 0.65
+        ribbonMesh.position.y = silkBasePosition.y + pointerInfluence.currentY * 0.5
     }
 
     if (renderer && scene && camera) {
@@ -357,6 +422,7 @@ const disposeSilk = () => {
         cancelAnimationFrame(animationFrameId)
         animationFrameId = null
     }
+    lastFrameTime = 0
 
     if (resizeHandler) {
         window.removeEventListener('resize', resizeHandler)
@@ -387,6 +453,7 @@ const initSilkCanvas = () => {
     }
 
     const container = silkContainer.value
+    resetBreezeState()
     scene = new THREE.Scene()
     // scene.fog = new THREE.FogExp2(0x030305, 0.04)
 
@@ -417,23 +484,23 @@ const initSilkCanvas = () => {
     geometry.setAttribute('color', colorAttr)
 
     silkMaterial = new THREE.MeshPhysicalMaterial({
-        color: 0xffffff,
+        color: 0xfefcf7,
         vertexColors: true,
         emissive: 0xfaf3e2,
-        emissiveIntensity: 0.22,
-        metalness: 0.28,
-        roughness: 0.18,
-        clearcoat: 0.98,
-        clearcoatRoughness: 0.15,
-        transmission: 0.24,
-        thickness: 1.4,
+        emissiveIntensity: 0.35,
+        metalness: 0.18,
+        roughness: 0.24,
+        clearcoat: 0.96,
+        clearcoatRoughness: 0.18,
+        transmission: 0.18,
+        thickness: 1.2,
         sheen: 1,
         sheenColor: new THREE.Color(0xfff5df),
-        sheenRoughness: 0.55,
+        sheenRoughness: 0.6,
         iridescence: 0.28,
         iridescenceIOR: 1.2,
-        iridescenceThicknessRange: [120, 320],
-        envMapIntensity: 0.4,
+        iridescenceThicknessRange: [140, 360],
+        envMapIntensity: 0.55,
         side: THREE.DoubleSide,
         flatShading: false,
     })
@@ -449,19 +516,19 @@ const initSilkCanvas = () => {
 
         if (isMobile) {
             silkBaseRotation.x = Math.PI / 2.3
-            silkBaseRotation.y = 0.12
-            silkBaseRotation.z = Math.PI / 4.6
-            silkBasePosition.set(0.2, 0.8, -2)
+            silkBaseRotation.y = silkVerticalSpin
+            silkBaseRotation.z = Math.PI / 4.2
+            silkBasePosition.set(0.05, -0.6, -1.75)
         } else if (isTablet) {
-            silkBaseRotation.x = Math.PI / 3
-            silkBaseRotation.y = 0.02
-            silkBaseRotation.z = Math.PI / 2.9
-            silkBasePosition.set(0.6, 0.1, 0.6)
+            silkBaseRotation.x = Math.PI / 3.1
+            silkBaseRotation.y = silkVerticalSpin
+            silkBaseRotation.z = Math.PI / 2.7
+            silkBasePosition.set(0.45, -1.15, 0.35)
         } else {
-            silkBaseRotation.x = Math.PI / 3.4
-            silkBaseRotation.y = -0.08
-            silkBaseRotation.z = Math.PI / 2.45
-            silkBasePosition.set(1.2, -0.4, 1.8)
+            silkBaseRotation.x = Math.PI / 3.6
+            silkBaseRotation.y = silkVerticalSpin
+            silkBaseRotation.z = Math.PI / 2.35
+            silkBasePosition.set(0.95, -1.65, 1.55)
         }
 
         ribbonMesh.rotation.set(silkBaseRotation.x, silkBaseRotation.y, silkBaseRotation.z)
@@ -483,6 +550,9 @@ const initSilkCanvas = () => {
     const fillLight = new THREE.DirectionalLight(0xdfe9ff, 1.2)
     fillLight.position.set(-6, -8, 4)
     scene.add(fillLight)
+
+    const hemiLight = new THREE.HemisphereLight(0xfffbf5, 0xe7ecff, 0.8)
+    scene.add(hemiLight)
 
     // 背光提升质感
     const backLight = new THREE.SpotLight(0xf3e6ff, 2.5)
@@ -642,13 +712,6 @@ onMounted(() => {
         initCursor()
     }
 
-    if (typeof window !== 'undefined') {
-        silkPointerHandler = (event: PointerEvent) => {
-            updatePointerTargets(event.clientX, event.clientY)
-        }
-        window.addEventListener('pointermove', silkPointerHandler, { passive: true })
-    }
-
     evaluateSilkFallback()
 
     if (typeof window !== 'undefined' && 'matchMedia' in window) {
@@ -687,11 +750,6 @@ onBeforeUnmount(() => {
     if (moveHandler) {
         window.removeEventListener('mousemove', moveHandler)
     }
-
-    if (typeof window !== 'undefined' && silkPointerHandler) {
-        window.removeEventListener('pointermove', silkPointerHandler)
-    }
-    silkPointerHandler = null
 
     if (typeof window !== 'undefined' && scrollHandler) {
         window.removeEventListener('scroll', scrollHandler)
@@ -849,8 +907,7 @@ onBeforeUnmount(() => {
                     <div class="bento-grid">
                         <article class="bento-card bento-card--xl project-item">
                             <div class="bento-card__media" aria-hidden="true">
-                                <img
-                                    src="https://images.unsplash.com/photo-1524504388940-b1c1722653e1?q=80&w=1980&auto=format&fit=crop"
+                                <img src="https://images.unsplash.com/photo-1524504388940-b1c1722653e1?q=80&w=1980&auto=format&fit=crop"
                                     alt="Architected halo gown" loading="lazy" />
                             </div>
                             <div class="bento-card__meta">
@@ -862,8 +919,7 @@ onBeforeUnmount(() => {
 
                         <article class="bento-card bento-card--tall project-item">
                             <div class="bento-card__media" aria-hidden="true">
-                                <img
-                                    src="https://images.unsplash.com/photo-1429257413823-8a01dd0e9701?q=80&w=1200&auto=format&fit=crop"
+                                <img src="https://images.unsplash.com/photo-1429257413823-8a01dd0e9701?q=80&w=1200&auto=format&fit=crop"
                                     alt="Hand pleated silk" loading="lazy" />
                             </div>
                             <div class="bento-card__meta">
@@ -887,8 +943,7 @@ onBeforeUnmount(() => {
 
                         <article class="bento-card project-item">
                             <div class="bento-card__media" aria-hidden="true">
-                                <img
-                                    src="https://images.unsplash.com/photo-1518544801958-efcbf8a7ec10?q=80&w=1200&auto=format&fit=crop"
+                                <img src="https://images.unsplash.com/photo-1518544801958-efcbf8a7ec10?q=80&w=1200&auto=format&fit=crop"
                                     alt="Pearl embroidery" loading="lazy" />
                             </div>
                             <div class="bento-card__meta">
