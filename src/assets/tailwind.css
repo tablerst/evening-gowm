@@ -414,6 +414,32 @@
     margin-top: 0.25rem;
   }
 
+  .atelier-panel .hero-pill {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1.25rem;
+    padding-block: 1rem;
+  }
+
+  .atelier-panel .hero-pill__label {
+    flex: 0 0 auto;
+    margin-top: 0;
+    font-size: 0.6rem;
+    letter-spacing: 0.32em;
+    text-transform: uppercase;
+  }
+
+  .atelier-panel .hero-pill__value {
+    flex: 1 1 auto;
+    margin-top: 0;
+    text-align: right;
+    font-size: 1.05rem;
+    letter-spacing: 0.08em;
+    font-family: 'Playfair Display', serif;
+    font-variant-numeric: tabular-nums;
+  }
+
   .hero-note {
     border: 1px solid var(--border-hairline);
     border-radius: 1.5rem;
