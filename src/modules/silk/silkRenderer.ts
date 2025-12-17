@@ -1,6 +1,7 @@
 import { nextTick } from 'vue'
 import type { Ref } from 'vue'
 import * as THREE from 'three'
+import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js'
 
 export type NetworkInformationLike = {
     effectiveType?: string
@@ -123,10 +124,108 @@ export const createSilkRenderer = ({
     let renderer: THREE.WebGLRenderer | null = null
     let ribbonMesh: THREE.Mesh<THREE.PlaneGeometry, THREE.MeshPhysicalMaterial> | null = null
     let silkMaterial: THREE.MeshPhysicalMaterial | null = null
+    let pmremGenerator: THREE.PMREMGenerator | null = null
+    let environmentTexture: THREE.Texture | null = null
+    let environmentRenderTarget: THREE.WebGLRenderTarget | null = null
+    let fabricNormalTexture: THREE.Texture | null = null
     let animationFrameId: number | null = null
     let resizeHandler: (() => void) | null = null
     let time = 0
     let lastFrameTime = 0
+
+    // 不考虑性能：提高横向细分，避免“像纸片”一样的生硬折线。
+    // 这里的 heightSegments 对应 PlaneGeometry 的 heightSegments，必须与 updateRibbon 的遍历一致。
+    const ribbonHeightSegments = 80
+
+    const createFabricNormalMap = (size = 256) => {
+        // 程序化“织物细纹”法线贴图：让高光更碎、更像真实丝绸纤维微表面。
+        // 先做一个可平铺高度场，再用中心差分法生成法线。
+        const height = new Float32Array(size * size)
+
+        const hash = (x: number, y: number) => {
+            const s = Math.sin(x * 127.1 + y * 311.7) * 43758.5453123
+            return s - Math.floor(s)
+        }
+
+        const smoothstep = (t: number) => t * t * (3 - 2 * t)
+
+        const valueNoise = (x: number, y: number) => {
+            const x0 = Math.floor(x)
+            const y0 = Math.floor(y)
+            const x1 = x0 + 1
+            const y1 = y0 + 1
+
+            const sx = smoothstep(x - x0)
+            const sy = smoothstep(y - y0)
+
+            const n00 = hash(x0, y0)
+            const n10 = hash(x1, y0)
+            const n01 = hash(x0, y1)
+            const n11 = hash(x1, y1)
+
+            const ix0 = n00 + (n10 - n00) * sx
+            const ix1 = n01 + (n11 - n01) * sx
+            return ix0 + (ix1 - ix0) * sy
+        }
+
+        const fbm = (x: number, y: number) => {
+            let amp = 0.6
+            let freq = 1
+            let sum = 0
+            let norm = 0
+            for (let i = 0; i < 5; i += 1) {
+                sum += amp * (valueNoise(x * freq, y * freq) * 2 - 1)
+                norm += amp
+                amp *= 0.5
+                freq *= 2
+            }
+            return sum / norm
+        }
+
+        for (let y = 0; y < size; y += 1) {
+            for (let x = 0; x < size; x += 1) {
+                const u = x / size
+                const v = y / size
+
+                // 横向纤维细纹（近似织物方向）+ 少量交错扰动
+                const fiber = Math.sin(u * Math.PI * 2 * 42) * 0.18
+                const cross = Math.sin(v * Math.PI * 2 * 9 + u * 6.0) * 0.12
+                const noise = fbm(u * 6, v * 6) * 0.22
+                height[y * size + x] = fiber + cross + noise
+            }
+        }
+
+        const data = new Uint8Array(size * size * 4)
+        const strength = 3.2
+        const wrap = (n: number) => (n + size) % size
+
+        for (let y = 0; y < size; y += 1) {
+            for (let x = 0; x < size; x += 1) {
+                const hL = height[y * size + wrap(x - 1)] ?? 0
+                const hR = height[y * size + wrap(x + 1)] ?? 0
+                const hD = height[wrap(y - 1) * size + x] ?? 0
+                const hU = height[wrap(y + 1) * size + x] ?? 0
+
+                const dx = (hR - hL) * strength
+                const dy = (hU - hD) * strength
+
+                const n = new THREE.Vector3(-dx, -dy, 1).normalize()
+                const idx = (y * size + x) * 4
+                data[idx] = Math.round((n.x * 0.5 + 0.5) * 255)
+                data[idx + 1] = Math.round((n.y * 0.5 + 0.5) * 255)
+                data[idx + 2] = Math.round((n.z * 0.5 + 0.5) * 255)
+                data[idx + 3] = 255
+            }
+        }
+
+        const tex = new THREE.DataTexture(data, size, size, THREE.RGBAFormat)
+        tex.colorSpace = THREE.NoColorSpace
+        tex.wrapS = THREE.RepeatWrapping
+        tex.wrapT = THREE.RepeatWrapping
+        tex.repeat.set(14, 5)
+        tex.needsUpdate = true
+        return tex
+    }
 
     const resetBreezeState = () => {
         breezeState.phaseX = Math.random() * Math.PI * 2
@@ -184,7 +283,7 @@ export const createSilkRenderer = ({
         const colors = geometry.attributes.color as THREE.BufferAttribute
 
         const widthSegments = config.segments
-        const heightSegments = 20
+        const heightSegments = ribbonHeightSegments
         const verticesPerRow = widthSegments + 1
 
         const baseR = config.baseColor.r
@@ -199,10 +298,10 @@ export const createSilkRenderer = ({
 
         const travel = time * 1.35
         const breathing = Math.sin(time * 0.35) * 0.3
+        const microTime = time * 0.9
 
         for (let col = 0; col < verticesPerRow; col += 1) {
             const ratio = col / widthSegments
-            const x = ratio * config.length - config.length / 2
             const flowPhase = ratio * (Math.PI * 2) * config.flowFrequency - travel
             const crossPhase = ratio * 10 - time * 0.65
 
@@ -212,8 +311,18 @@ export const createSilkRenderer = ({
             let waveZ = Math.sin(flowPhase) * (1 + scrollEnvelope * 0.8)
             waveZ += Math.sin(flowPhase * 1.5 - time * 0.4) * (0.3 + scrollEnvelope * 0.18) * (0.5 + pointerEnergy * 0.4)
             waveZ += Math.sin(crossPhase) * (0.2 + scrollEnvelope * 0.12)
+
+            // 细密褶皱/湍流：提升“丝绸碎高光”的层次（不考虑性能）
+            const microWrinkle =
+                Math.sin(flowPhase * 6.5 + microTime * 1.8) * 0.08 +
+                Math.sin(flowPhase * 10.5 - microTime * 1.2) * 0.05
+            const turbulence =
+                Math.sin(flowPhase * 2.2 + crossPhase * 1.7) * 0.06 +
+                Math.sin(flowPhase * 3.8 - crossPhase * 1.1 + microTime) * 0.04
+
             waveZ += breezePush * 0.55
             waveZ += breathing * 0.18
+            waveZ += (microWrinkle + turbulence) * (0.55 + scrollEnvelope * 0.5) * (0.5 + pointerEnergy * 0.5)
 
             const meander = Math.sin(flowPhase * 0.32 - time * 0.18) * 0.35
             const centerY = Math.cos(flowPhase * 0.64 + crossPhase * 0.2) * (0.9 + scrollEnvelope * 0.45) + meander + lift * 0.85
@@ -235,8 +344,15 @@ export const createSilkRenderer = ({
                 const v = row / heightSegments
                 const offset = (v - 0.5) * config.width
 
+                // 边缘更容易抖动与起皱（更像薄面料）
+                const edge = Math.pow(Math.abs(v - 0.5) * 2, 1.25)
+                const edgeFlutter =
+                    Math.sin(flowPhase * 5.2 + microTime * 2.6 + v * 9.0) * 0.09 +
+                    Math.sin(flowPhase * 8.4 - microTime * 1.9 + v * 5.0) * 0.05
+                const edgeLift = edge * edgeFlutter * (0.6 + pointerEnergy * 0.55) * (0.5 + scrollEnvelope * 0.7)
+
                 const y = centerY + offset * Math.cos(twist)
-                const z = waveZ + offset * Math.sin(twist)
+                const z = waveZ + offset * Math.sin(twist) + edgeLift
 
                 positions.setY(idx, y)
                 positions.setZ(idx, z)
@@ -247,6 +363,17 @@ export const createSilkRenderer = ({
         positions.needsUpdate = true
         colors.needsUpdate = true
         geometry.computeVertexNormals()
+
+        // 各向异性高光可能依赖 tangent；动态变形后重算（不考虑性能）。
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const geoAny = geometry as any
+        if (typeof geoAny.computeTangents === 'function') {
+            try {
+                geoAny.computeTangents()
+            } catch {
+                // computeTangents 可能因几何属性条件不满足而失败，忽略即可。
+            }
+        }
     }
 
     const animateSilk = () => {
@@ -323,9 +450,28 @@ export const createSilkRenderer = ({
             ribbonMesh.geometry.dispose()
         }
 
+        if (scene) {
+            scene.environment = null
+        }
+
         silkMaterial?.dispose()
         silkMaterial = null
         ribbonMesh = null
+
+        if (fabricNormalTexture) {
+            fabricNormalTexture.dispose()
+            fabricNormalTexture = null
+        }
+
+        if (environmentRenderTarget) {
+            environmentRenderTarget.dispose()
+            environmentRenderTarget = null
+        }
+
+        environmentTexture = null
+
+        pmremGenerator?.dispose()
+        pmremGenerator = null
 
         renderer?.dispose()
         if (renderer?.domElement && containerRef.value?.contains(renderer.domElement)) {
@@ -361,16 +507,27 @@ export const createSilkRenderer = ({
         camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 1000)
         camera.position.set(0, 0, 30)
 
-        renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true })
-        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
+        renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: 'high-performance' })
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 3))
         renderer.setSize(width, height)
         renderer.setClearAlpha(0)
         renderer.toneMapping = THREE.ACESFilmicToneMapping
-        renderer.toneMappingExposure = 1.0
+        renderer.toneMappingExposure = 1.05
         renderer.outputColorSpace = THREE.SRGBColorSpace
         container.appendChild(renderer.domElement)
 
-        const geometry = new THREE.PlaneGeometry(config.length * 1.45, config.width * 1.1, config.segments, 30)
+        // PMREM 环境：丝绸高光非常依赖环境反射，缺了会很“假”。
+        pmremGenerator = new THREE.PMREMGenerator(renderer)
+        pmremGenerator.compileEquirectangularShader()
+        environmentRenderTarget = pmremGenerator.fromScene(new RoomEnvironment(), 0.04)
+        environmentTexture = environmentRenderTarget.texture
+
+        const geometry = new THREE.PlaneGeometry(
+            config.length * 1.45,
+            config.width * 1.1,
+            config.segments,
+            ribbonHeightSegments
+        )
         const positionAttr = geometry.attributes.position as THREE.BufferAttribute | undefined
         if (!positionAttr) {
             console.error('PlaneGeometry is missing position attribute')
@@ -379,24 +536,55 @@ export const createSilkRenderer = ({
         const colorAttr = new THREE.BufferAttribute(new Float32Array(positionAttr.count * 3), 3)
         geometry.setAttribute('color', colorAttr)
 
+        fabricNormalTexture = createFabricNormalMap(256)
+
         silkMaterial = new THREE.MeshPhysicalMaterial({
+            // 丝绸为介电材质：metalness 应接近 0；高光主要来自 clearcoat + sheen + 各向异性。
             color: 0xfefcf7,
             vertexColors: true,
+
             emissive: 0xfaf3e2,
-            emissiveIntensity: 0.35,
-            metalness: 0.18,
-            roughness: 0.24,
-            clearcoat: 0.96,
-            clearcoatRoughness: 0.18,
-            transmission: 0.18,
-            thickness: 1.2,
-            sheen: 1,
-            sheenColor: new THREE.Color(0xfff5df),
-            sheenRoughness: 0.6,
-            iridescence: 0.28,
-            iridescenceIOR: 1.2,
-            iridescenceThicknessRange: [140, 360],
-            envMapIntensity: 0.55,
+            emissiveIntensity: 0.18,
+
+            metalness: 0.0,
+            roughness: 0.18,
+            ior: 1.45,
+
+            // 表层强高光（类似薄清漆）
+            clearcoat: 1.0,
+            clearcoatRoughness: 0.08,
+
+            // 织物 sheen：柔亮、带色的边缘高光
+            sheen: 1.0,
+            sheenColor: new THREE.Color(0xfff2df),
+            sheenRoughness: 0.35,
+
+            // 轻微薄膜彩色漂移：控制在小范围，避免塑料感
+            iridescence: 0.12,
+            iridescenceIOR: 1.25,
+            iridescenceThicknessRange: [160, 360],
+
+            // 各向异性高光（沿织物纹理方向）
+            anisotropy: 0.85,
+            anisotropyRotation: Math.PI / 2,
+
+            // 丝绸很薄：少量透光即可
+            transmission: 0.04,
+            thickness: 0.08,
+            attenuationDistance: 0.8,
+            attenuationColor: new THREE.Color(0xfff7ea),
+
+            // 微法线，让高光更“丝”
+            normalMap: fabricNormalTexture,
+            normalScale: new THREE.Vector2(0.22, 0.22),
+
+            // 环境反射强度
+            envMapIntensity: 1.15,
+
+            // 额外高光控制（three 版本支持时生效）
+            specularIntensity: 0.85,
+            specularColor: new THREE.Color(0xffffff),
+
             side: THREE.DoubleSide,
             flatShading: false,
         })
@@ -433,22 +621,27 @@ export const createSilkRenderer = ({
         updateMeshPosition()
         scene.add(ribbonMesh)
 
-        const ambientLight = new THREE.AmbientLight(0xfdf8ef, 0.85)
+        // 绑定环境反射到 scene
+        scene.environment = environmentTexture
+
+        const ambientLight = new THREE.AmbientLight(0xfdf8ef, 0.55)
         scene.add(ambientLight)
 
-        const mainLight = new THREE.DirectionalLight(0xfff1dc, 2.2)
-        mainLight.position.set(12, 14, 8)
+        const mainLight = new THREE.DirectionalLight(0xfff1dc, 4.2)
+        mainLight.position.set(12, 16, 10)
         scene.add(mainLight)
 
-        const fillLight = new THREE.DirectionalLight(0xdfe9ff, 1.2)
-        fillLight.position.set(-6, -8, 4)
+        const fillLight = new THREE.DirectionalLight(0xdfe9ff, 2.0)
+        fillLight.position.set(-10, -10, 8)
         scene.add(fillLight)
 
-        const hemiLight = new THREE.HemisphereLight(0xfffbf5, 0xe7ecff, 0.8)
+        const hemiLight = new THREE.HemisphereLight(0xfffbf5, 0xe7ecff, 0.65)
         scene.add(hemiLight)
 
-        const backLight = new THREE.SpotLight(0xf3e6ff, 2.5)
-        backLight.position.set(0, 10, -6)
+        const backLight = new THREE.SpotLight(0xf3e6ff, 6.5)
+        backLight.position.set(0, 12, -10)
+        backLight.angle = THREE.MathUtils.degToRad(32)
+        backLight.penumbra = 0.75
         backLight.lookAt(0, 0, 0)
         scene.add(backLight)
 
@@ -486,11 +679,9 @@ export const createSilkRenderer = ({
         }
 
         const nav = navigator as NavigatorWithConnection
-        const effectiveType = nav.connection?.effectiveType ?? ''
-        const lowPowerCpu = typeof nav.hardwareConcurrency === 'number' && nav.hardwareConcurrency > 0 && nav.hardwareConcurrency <= 4
-        const slowNetwork = effectiveType === 'slow-2g' || effectiveType === '2g'
         const lacksWebGL = !supportsWebGL()
-        const shouldFallback = lowPowerCpu || slowNetwork || lacksWebGL
+        // 本版本以“画质优先”为目标：不再因为 CPU/网络做静态回退，仅在缺少 WebGL 时回退。
+        const shouldFallback = lacksWebGL
 
         if (shouldFallback === shouldUseStaticSilk.value) {
             return
