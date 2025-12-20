@@ -1,6 +1,10 @@
 <script setup lang="ts">
+import { useI18n } from 'vue-i18n'
+
 import bgUrl from '@/assets/bg.webp'
 import logoUrl from '@/assets/logo.webp'
+
+const { t } = useI18n()
 </script>
 
 <template>
@@ -16,8 +20,9 @@ import logoUrl from '@/assets/logo.webp'
             class="relative z-20 bg-white border border-brand shadow-[4px_4px_0px_#000226] md:shadow-[8px_8px_0px_#000226] flex flex-col items-center p-6 md:p-12 w-[90%] max-w-[480px] select-none">
             <!-- Header Specs -->
             <div class="w-full flex justify-between items-center mb-6 md:mb-8 border-b border-slate pb-4">
-                <span class="font-mono text-[10px] text-gray-400 tracking-wider">REF: 2025-ARCHIVE</span>
-                <span class="font-mono text-[10px] text-brand font-bold tracking-wider">SECURE GATEWAY</span>
+                <span class="font-mono text-[10px] text-gray-400 tracking-wider">{{ t('preview.ref') }}</span>
+                <span class="font-mono text-[10px] text-brand font-bold tracking-wider">{{ t('preview.security')
+                    }}</span>
             </div>
 
             <!-- Logo (Inverted for White Background) -->
@@ -28,9 +33,9 @@ import logoUrl from '@/assets/logo.webp'
             <!-- Slogan / Identity -->
             <div class="text-center mb-8 md:mb-12 space-y-3">
                 <h2 class="font-display text-base md:text-xl tracking-widest text-brand uppercase whitespace-nowrap">
-                    Design-Production-Sales</h2>
+                    {{ t('preview.heading') }}</h2>
                 <p class="font-sans text-[10px] tracking-[0.3em] text-gray-500 uppercase font-medium">
-                    Est. 2017 · Full Process Supported
+                    {{ t('preview.subheading') }}
                 </p>
             </div>
 
@@ -38,7 +43,7 @@ import logoUrl from '@/assets/logo.webp'
             <a href="/"
                 class="w-full group relative flex items-center justify-center bg-brand text-white h-14 border border-brand hover:bg-white hover:text-brand transition-colors duration-0">
                 <span class="font-mono text-xs tracking-[0.2em] font-bold uppercase">
-                    [ Enter Archive ]
+                    {{ t('preview.enter') }}
                 </span>
             </a>
 
@@ -46,7 +51,7 @@ import logoUrl from '@/assets/logo.webp'
             <div class="mt-6 flex flex-col items-center gap-1">
                 <div class="flex items-center gap-2">
                     <div class="w-1.5 h-1.5 bg-orange-500 rounded-none animate-pulse"></div>
-                    <span class="font-mono text-[10px] text-gray-400 uppercase">System Ready</span>
+                    <span class="font-mono text-[10px] text-gray-400 uppercase">{{ t('preview.ready') }}</span>
                 </div>
             </div>
         </div>

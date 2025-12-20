@@ -1,7 +1,14 @@
 <script setup lang="ts">
-import { onBeforeUnmount, onMounted, ref } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
+
+import { setLocale } from '@/i18n'
 
 const isNavCompacted = ref(false)
+
+const { t, locale } = useI18n()
+
+const localeToggleLabel = computed(() => (locale.value === 'zh' ? t('nav.language.en') : t('nav.language.zh')))
 
 let scrollHandler: (() => void) | null = null
 
@@ -22,6 +29,10 @@ onBeforeUnmount(() => {
     }
     scrollHandler = null
 })
+
+const toggleLocale = () => {
+    setLocale(locale.value === 'zh' ? 'en' : 'zh')
+}
 </script>
 
 <template>
@@ -31,32 +42,41 @@ onBeforeUnmount(() => {
             isNavCompacted ? 'py-3 lens-nav--compact' : 'py-5'
         ]">
             <RouterLink :to="{ name: 'home' }" class="lens-nav__brand nav-link">
-                NOIR & ÉCLAT
-                <span>WHITE PHANTOM</span>
+                {{ t('nav.brandLine1') }}
+                <span>{{ t('nav.brandLine2') }}</span>
             </RouterLink>
             <div class="lens-nav__links">
-                <RouterLink :to="{ name: 'home', hash: '#gallery' }" class="nav-link">Gallery</RouterLink>
-                <RouterLink :to="{ name: 'home', hash: '#atelier' }" class="nav-link">Atelier</RouterLink>
-                <RouterLink :to="{ name: 'home', hash: '#couture' }" class="nav-link">Couture</RouterLink>
-                <RouterLink :to="{ name: 'home', hash: '#contact' }" class="nav-link">Contact</RouterLink>
+                <RouterLink :to="{ name: 'home', hash: '#gallery' }" class="nav-link">{{ t('nav.links.gallery') }}
+                </RouterLink>
+                <RouterLink :to="{ name: 'home', hash: '#atelier' }" class="nav-link">{{ t('nav.links.atelier') }}
+                </RouterLink>
+                <RouterLink :to="{ name: 'home', hash: '#couture' }" class="nav-link">{{ t('nav.links.couture') }}
+                </RouterLink>
+                <RouterLink :to="{ name: 'home', hash: '#contact' }" class="nav-link">{{ t('nav.links.contact') }}
+                </RouterLink>
             </div>
-            <button class="nav-ghost nav-link" type="button">预约私享厅</button>
+            <div class="flex items-center gap-3">
+                <button class="nav-ghost nav-link" type="button" @click="toggleLocale">
+                    {{ localeToggleLabel }}
+                </button>
+                <button class="nav-ghost nav-link" type="button">{{ t('nav.cta') }}</button>
+            </div>
         </nav>
 
         <slot />
 
         <footer class="site-footer">
             <div class="site-footer__glow" aria-hidden="true"></div>
-            <p class="eyebrow">BY APPOINTMENT ONLY</p>
-            <h2 class="text-3xl md:text-5xl font-serif tracking-[0.3em] mt-4">WHITE PHANTOM</h2>
+            <p class="eyebrow">{{ t('footer.tagline') }}</p>
+            <h2 class="text-3xl md:text-5xl font-serif tracking-[0.3em] mt-4">{{ t('footer.brand') }}</h2>
             <div class="site-footer__links mt-6">
-                <a href="#" class="nav-link">Instagram</a>
+                <a href="#" class="nav-link">{{ t('footer.instagram') }}</a>
                 <span>•</span>
-                <a href="#" class="nav-link">WeChat</a>
+                <a href="#" class="nav-link">{{ t('footer.wechat') }}</a>
                 <span>•</span>
-                <a href="#" class="nav-link">Email</a>
+                <a href="#" class="nav-link">{{ t('footer.email') }}</a>
             </div>
-            <p class="site-footer__legal">© 2025 NOIR & ÉCLAT · PARIS / SHANGHAI</p>
+            <p class="site-footer__legal">{{ t('footer.legal') }}</p>
         </footer>
     </div>
 </template>

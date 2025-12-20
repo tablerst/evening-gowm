@@ -1,14 +1,19 @@
+<script setup lang="ts">
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
+</script>
+
 <template>
     <section id="gallery" class="section-block gallery-section">
         <div class="page-shell">
             <div class="section-heading">
                 <div>
-                    <p class="eyebrow">THE GALLERY</p>
-                    <h2 class="text-2xl md:text-4xl font-serif">Vernissage · 白晕展柜</h2>
+                    <p class="eyebrow">{{ t('gallery.eyebrow') }}</p>
+                    <h2 class="text-2xl md:text-4xl font-serif">{{ t('gallery.title') }}</h2>
                 </div>
                 <p class="section-heading__lede">
-                    非对称 Bento Grid 将礼服、高定配饰与材质特写拆分展示。
-                    每张卡片以 1px 线性边框悬浮在“工坊迷雾”上，呈现高调摄影的高光。
+                    {{ t('gallery.lede') }}
                 </p>
             </div>
 
@@ -19,9 +24,9 @@
                             alt="Architected halo gown" loading="lazy" />
                     </div>
                     <div class="bento-card__meta">
-                        <p class="bento-card__caption">LOOK 01 · STRUCTURE</p>
-                        <h3 class="bento-card__title">Architected Halo</h3>
-                        <p class="bento-card__caption">3D Corsetry · Hidden boning</p>
+                        <p class="bento-card__caption">{{ t('gallery.cards.halo.caption') }}</p>
+                        <h3 class="bento-card__title">{{ t('gallery.cards.halo.title') }}</h3>
+                        <p class="bento-card__caption">{{ t('gallery.cards.halo.desc') }}</p>
                     </div>
                 </article>
 
@@ -31,21 +36,20 @@
                             alt="Hand pleated silk drape" loading="lazy" />
                     </div>
                     <div class="bento-card__meta">
-                        <p class="bento-card__caption">MATERIAL LAB</p>
-                        <h3 class="bento-card__title">Hand Pleated Silk</h3>
-                        <p class="bento-card__caption">Perforated voile</p>
+                        <p class="bento-card__caption">{{ t('gallery.cards.pleated.caption') }}</p>
+                        <h3 class="bento-card__title">{{ t('gallery.cards.pleated.title') }}</h3>
+                        <p class="bento-card__caption">{{ t('gallery.cards.pleated.desc') }}</p>
                     </div>
                 </article>
 
                 <article class="bento-card bento-card--wide project-item">
                     <div class="bento-card__meta">
-                        <p class="bento-card__caption">VERNISSAGE NOTES</p>
-                        <h3 class="bento-card__title">Gallery Flow</h3>
+                        <p class="bento-card__caption">{{ t('gallery.cards.flow.caption') }}</p>
+                        <h3 class="bento-card__title">{{ t('gallery.cards.flow.title') }}</h3>
                         <p class="text-sm text-stone leading-relaxed">
-                            入口即见中央主礼服，右侧为材质试验室，左翼陈列编辑精选 Lookbook。
-                            全场音景与灯光均以 72 分贝以内的呼吸节奏铺陈。
+                            {{ t('gallery.cards.flow.copy') }}
                         </p>
-                        <span class="bento-card__tag nav-link">LINEAR LUXURY</span>
+                        <span class="bento-card__tag nav-link">{{ t('gallery.cards.flow.tag') }}</span>
                     </div>
                 </article>
 
@@ -55,8 +59,8 @@
                             alt="Pearl embroidery detail" loading="lazy" />
                     </div>
                     <div class="bento-card__meta">
-                        <p class="bento-card__caption">DETAIL</p>
-                        <h3 class="bento-card__title">Paillette Clouds</h3>
+                        <p class="bento-card__caption">{{ t('gallery.cards.detail.caption') }}</p>
+                        <h3 class="bento-card__title">{{ t('gallery.cards.detail.title') }}</h3>
                     </div>
                 </article>
             </div>

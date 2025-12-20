@@ -9,6 +9,7 @@ const config: Config = {
         structure: '#000000',
         brand: '#000226', // Midnight Abyss
         slate: '#E2E8F0', // Cool Slate
+        border: '#E2E8F0', // Alias for Cool Slate
         // Legacy colors (kept for compatibility if needed, but prefer new ones)
         atelier: '#F9F9F9',
         silk: '#FFFFFF',

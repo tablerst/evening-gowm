@@ -1,5 +1,6 @@
 export type AppEnv = {
     previewMode: boolean
+    locale: 'zh' | 'en'
     mode: string
     dev: boolean
     prod: boolean
@@ -24,8 +25,21 @@ const readPreviewFlag = (): unknown => {
     return env.VITE_PREVIEW ?? env.PRE_VIEW
 }
 
+const parseLocale = (value: unknown): AppEnv['locale'] => {
+    const normalized = String(value ?? '').trim().toLowerCase()
+
+    if (normalized === 'en') return 'en'
+    return 'zh'
+}
+
+const readLocaleFlag = (): unknown => {
+    const env = import.meta.env as unknown as Record<string, unknown>
+    return env.VITE_LOCALE ?? env.PRE_LOCALE
+}
+
 export const appEnv: AppEnv = {
     previewMode: parseBoolean(readPreviewFlag()),
+    locale: parseLocale(readLocaleFlag()),
     mode: import.meta.env.MODE,
     dev: import.meta.env.DEV,
     prod: import.meta.env.PROD,
