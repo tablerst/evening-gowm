@@ -22,14 +22,15 @@ import logoUrl from '@/assets/logo.webp'
 
             <!-- Logo (Inverted for White Background) -->
             <div class="mb-10 mt-4">
-                <img :src="logoUrl" alt="FLEURLIS" class="w-56 invert opacity-90" />
+                <img :src="logoUrl" alt="FLEURLIS" class="w-72 invert opacity-90" />
             </div>
 
             <!-- Slogan / Identity -->
             <div class="text-center mb-12 space-y-3">
-                <h2 class="font-display text-2xl tracking-widest text-brand uppercase">Midnight Geometry</h2>
+                <h2 class="font-display text-xl tracking-widest text-brand uppercase whitespace-nowrap">
+                    Design-Production-Sales</h2>
                 <p class="font-sans text-[10px] tracking-[0.3em] text-gray-500 uppercase font-medium">
-                    Est. 2008 · Industrial Division
+                    Est. 2017 · Full Process Supported
                 </p>
             </div>
 
@@ -44,8 +45,8 @@ import logoUrl from '@/assets/logo.webp'
             <!-- Footer Specs -->
             <div class="mt-6 flex flex-col items-center gap-1">
                 <div class="flex items-center gap-2">
-                    <div class="w-1.5 h-1.5 bg-green-600 rounded-none animate-pulse"></div>
-                    <span class="font-mono text-[10px] text-gray-400 uppercase">System Operational</span>
+                    <div class="w-1.5 h-1.5 bg-orange-500 rounded-none animate-pulse"></div>
+                    <span class="font-mono text-[10px] text-gray-400 uppercase">System Ready</span>
                 </div>
             </div>
         </div>
