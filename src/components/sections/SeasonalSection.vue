@@ -5,7 +5,7 @@ const { t } = useI18n()
 </script>
 
 <template>
-    <section class="py-12 border-b border-border bg-white">
+    <section id="seasonal" class="py-12 border-b border-border bg-white">
         <div class="px-4 md:px-8 mb-6 flex justify-between items-end">
             <h2 class="text-2xl font-display uppercase tracking-wider">{{ t('seasonal.title') }}</h2>
             <span class="font-mono text-sm text-gray-500">{{ t('seasonal.season') }}</span>

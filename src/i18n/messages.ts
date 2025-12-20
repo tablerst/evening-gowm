@@ -6,10 +6,11 @@ export const messages = {
             brandLine1: 'NOIR & ÉCLAT',
             brandLine2: 'WHITE PHANTOM',
             links: {
-                gallery: 'Gallery',
-                atelier: 'Atelier',
-                couture: 'Couture',
-                contact: 'Contact',
+                process: 'Process',
+                brief: 'Brief',
+                seasonal: 'Seasonal',
+                catalog: 'Catalog',
+                appointment: 'Appointment',
             },
             cta: 'Book Private Salon',
             language: {
@@ -20,19 +21,19 @@ export const messages = {
         },
         footer: {
             tagline: 'BY APPOINTMENT ONLY',
-            brand: 'WHITE PHANTOM',
+            brand: 'FLEURLIS',
             instagram: 'Instagram',
             wechat: 'WeChat',
             email: 'Email',
-            legal: '© 2025 NOIR & ÉCLAT · PARIS / SHANGHAI',
+            legal: '© 2025 FLEURLIS · SUZHOU · EST. 2017',
         },
         hero: {
-            label: '// PRODUCTION_THEATRE_V3.0',
-            body: `EST. 2008
-MANUFACTURING CAPACITY: 50,000/YR
-PRECISION CUTTING · HAND FINISHING
+            label: '// INTRODUCTION_THEATRE',
+            body: `EST. 2008 · SHUNHE FACTORY
+20 YEARS IN CUSTOM & WHOLESALE
+WE KNOW QUALITY · MARKET · DELIVERY
 
-WE BUILD STRUCTURE FOR THE EVENING.
+CRAFTSMANSHIP IN EVERY STEP
 --------------------------------
 SOURCE FACTORY · GLOBAL SUPPLY`,
         },
@@ -68,9 +69,9 @@ SOURCE FACTORY · GLOBAL SUPPLY`,
             brandTitle: 'The Brand',
             brandStats: {
                 est: 'EST.',
-                estValue: '2008',
+                estValue: '2017',
                 hq: 'HQ',
-                hqValue: 'GUANGZHOU',
+                hqValue: 'SUZHOU',
                 clients: 'CLIENTS',
                 clientsValue: 'GLOBAL B2B',
                 capacity: 'CAPACITY',
@@ -168,10 +169,11 @@ SOURCE FACTORY · GLOBAL SUPPLY`,
             brandLine1: 'NOIR & ÉCLAT',
             brandLine2: 'WHITE PHANTOM',
             links: {
-                gallery: '画廊',
-                atelier: '工坊',
-                couture: '高定',
-                contact: '联系',
+                process: '设计与生产',
+                brief: '公司资讯',
+                seasonal: '当季系列',
+                catalog: '新品目录',
+                appointment: '预约到访',
             },
             cta: '预约私享厅',
             language: {
@@ -182,21 +184,21 @@ SOURCE FACTORY · GLOBAL SUPPLY`,
         },
         footer: {
             tagline: '仅限预约',
-            brand: 'WHITE PHANTOM',
+            brand: 'FLEURLIS',
             instagram: 'Instagram',
             wechat: '微信',
             email: '邮箱',
-            legal: '© 2025 NOIR & ÉCLAT · 巴黎 / 上海',
+            legal: '© 2025 FLEURLIS · 始于 2017 · 苏州',
         },
         hero: {
-            label: '// PRODUCTION_THEATRE_V3.0',
-            body: `始于 2008
-年产 50,000 件
-精密裁剪 · 手工收尾
+            label: '// INTRODUCTION_THEATRE',
+            body: `始于 2008 · 顺河镇工厂
+深耕晚礼服定制与批发近二十载
+懂品质 · 懂市场 · 懂交付
 
-为夜晚打造结构
+二十年匠心 · 守护每一道工序
 --------------------------------
-源头工厂 · 全球供给`,
+源头工厂 · 全球供应`,
         },
         ticker: {
             release: '新品发布 · 2025 春夏 · 仅限批发 ·',
@@ -228,9 +230,9 @@ SOURCE FACTORY · GLOBAL SUPPLY`,
             brandTitle: '品牌信息',
             brandStats: {
                 est: '创立',
-                estValue: '2008',
+                estValue: '2017',
                 hq: '总部',
-                hqValue: '广州',
+                hqValue: '苏州',
                 clients: '客户',
                 clientsValue: '全球 B2B',
                 capacity: '产能',

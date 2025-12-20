@@ -15,7 +15,7 @@ const tickerItems = computed(() => [
 </script>
 
 <template>
-    <div class="ticker-wrap bg-brand text-white overflow-hidden py-2 border-b border-white/10">
+    <div id="brief" class="ticker-wrap bg-brand text-white overflow-hidden py-2 border-b border-white/10">
         <div class="ticker">
             <div v-for="(item, index) in tickerItems" :key="index"
                 class="ticker__item inline-block px-4 font-mono text-sm">
