@@ -5,21 +5,20 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
+        canvas: '#FFFFFF',
+        structure: '#000000',
+        brand: '#000226', // Midnight Abyss
+        slate: '#E2E8F0', // Cool Slate
+        // Legacy colors (kept for compatibility if needed, but prefer new ones)
         atelier: '#F9F9F9',
         silk: '#FFFFFF',
         charcoal: '#1A1A1A',
-        stone: '#595959',
-        fog: '#8C8C8C',
-        'platinum-hairline': '#E5E5E5',
-        champagne: '#D4AF37',
-        vapor: 'rgba(255, 255, 255, 0.65)',
-        shimmer: '#FFF8E7',
-        'soft-shadow': 'rgba(200, 200, 200, 0.2)',
       },
       fontFamily: {
-        sans: ['Inter', 'Source Sans 3', 'sans-serif'],
-        serif: ['Playfair Display', 'Cormorant Garamond', 'serif'],
-        display: ['Playfair Display', 'Cinzel', 'serif'],
+        sans: ['Inter', 'sans-serif'],
+        serif: ['Bodoni Moda', 'serif'],
+        mono: ['JetBrains Mono', 'monospace'],
+        display: ['Bodoni Moda', 'serif'],
       },
       letterSpacing: {
         wide: '0.35em',
