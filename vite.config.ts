@@ -23,8 +23,9 @@ export default defineConfig(({ mode }) => {
       isDev ? vueDevTools() : null,
     ].filter(Boolean),
     define: {
-      // 让 vue-i18n 的消息编译器代码在构建期被 tree-shaking 掉，避免生成/调用 new Function
-      __INTLIFY_JIT_COMPILATION__: false,
+      // 允许注册 messageCompiler（用于将预编译生成的 AST 格式化为字符串）。
+      // 同时保持 DROP_MESSAGE_COMPILER=true，避免在运行时对「字符串消息」做编译，确保不引入 unsafe-eval。
+      __INTLIFY_JIT_COMPILATION__: true,
       __INTLIFY_DROP_MESSAGE_COMPILER__: true,
       __INTLIFY_PROD_DEVTOOLS__: false,
 
