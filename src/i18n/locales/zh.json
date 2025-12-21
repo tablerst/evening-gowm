@@ -87,11 +87,15 @@
   },
   "info": {
     "designerTitle": "设计师手记",
-    "designerBody": "我们剔除冗余，没有荷叶边，没有多余装饰，只留下结构与线条。设计就是身体的建筑蓝图。",
+    "designerBody": "在午夜的几何中寻找秩序。我们相信，真正的奢华不是繁复的堆砌，而是对线条的极致克制。每一件礼服都是一座微型建筑，以身体为地基，用丝绸与光影构建出绝对的理性之美。我们剔除一切干扰，只为呈现最纯粹的结构张力。",
     "designerSign": "- 创意总监",
     "appointmentTitle": "预约到访",
     "appointmentBody": "欢迎到展厅亲手触摸面料。我们为批发伙伴提供私享场次。",
     "appointmentCta": "预约参观",
+    "gisTitle": "全球坐标",
+    "gisLocation": "中国 · 苏州",
+    "gisCoordinates": "31.2989° N, 120.5853° E",
+    "gisStatus": "系统在线",
     "brandTitle": "品牌信息",
     "brandStats": {
       "est": "创立",

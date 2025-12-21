@@ -87,11 +87,15 @@
   },
   "info": {
     "designerTitle": "Designer's Note",
-    "designerBody": "We strip away the unnecessary. No ruffles, no excess. Just structure and silhouette. Our designs are architectural blueprints for the body.",
+    "designerBody": "Finding order in midnight geometry. We believe true luxury is not about accumulation, but extreme restraint of lines. Each gown is a micro-architecture, built upon the body, constructing absolute rational beauty with silk and light. We strip away all noise to present the purest structural tension.",
     "designerSign": "- Chief Director",
     "appointmentTitle": "Appointment",
     "appointmentBody": "Visit our showroom to feel the fabric quality. We offer private viewing sessions for wholesale partners.",
     "appointmentCta": "Book Visit",
+    "gisTitle": "Global Coordinates",
+    "gisLocation": "Suzhou · CN",
+    "gisCoordinates": "31.2989° N, 120.5853° E",
+    "gisStatus": "System Online",
     "brandTitle": "The Brand",
     "brandStats": {
       "est": "EST.",
