@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import HeroSection from '@/components/sections/HeroSection.vue'
-import TickerSection from '@/components/sections/TickerSection.vue'
+import UpdatesSection from '@/components/sections/UpdatesSection.vue'
 import SeasonalSection from '@/components/sections/SeasonalSection.vue'
 import ProductGridSection from '@/components/sections/ProductGridSection.vue'
 import InfoSection from '@/components/sections/InfoSection.vue'
@@ -9,7 +9,7 @@ import InfoSection from '@/components/sections/InfoSection.vue'
 <template>
     <main class="bg-white min-h-screen">
         <HeroSection />
-        <TickerSection />
+        <UpdatesSection />
         <SeasonalSection />
         <ProductGridSection />
         <InfoSection />

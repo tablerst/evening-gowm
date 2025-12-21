@@ -33,6 +33,12 @@
     "fashionWeek": "SHANGHAI FASHION WEEK · BOOTH A-12 ·",
     "leadTime": "PRODUCTION LEAD TIME: 14 DAYS ·"
   },
+  "updates": {
+    "eyebrow": "COMPANY BULLETIN",
+    "title": "Latest Updates",
+    "cta": "VIEW ALL ->",
+    "note": "Hardcoded feed for now. Will be backed by a service later."
+  },
   "seasonal": {
     "title": "Seasonal Collection",
     "season": "2025 S/S",
