@@ -6,18 +6,20 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/minio/minio-go/v7"
 	"github.com/redis/go-redis/v9"
+	"gorm.io/gorm"
 )
 
 // Handler bundles health endpoints dependencies.
 type Handler struct {
-	DB    *pgxpool.Pool
-	Cache *redis.Client
+	DB          *gorm.DB
+	Cache       *redis.Client
+	ObjectStore *minio.Client
 }
 
-func New(db *pgxpool.Pool, cache *redis.Client) *Handler {
-	return &Handler{DB: db, Cache: cache}
+func New(db *gorm.DB, cache *redis.Client, objectStore *minio.Client) *Handler {
+	return &Handler{DB: db, Cache: cache, ObjectStore: objectStore}
 }
 
 // Ping is a lightweight liveness endpoint.
@@ -34,7 +36,11 @@ func (h *Handler) Health(c *gin.Context) {
 	status := http.StatusOK
 
 	if h.DB != nil {
-		if err := h.DB.Ping(ctx); err != nil {
+		sqlDB, err := h.DB.DB()
+		if err != nil {
+			status = http.StatusServiceUnavailable
+			checks["postgres"] = "error: " + err.Error()
+		} else if err := sqlDB.PingContext(ctx); err != nil {
 			status = http.StatusServiceUnavailable
 			checks["postgres"] = "error: " + err.Error()
 		} else {
@@ -53,6 +59,17 @@ func (h *Handler) Health(c *gin.Context) {
 		}
 	} else {
 		checks["redis"] = "disabled"
+	}
+
+	if h.ObjectStore != nil {
+		if _, err := h.ObjectStore.ListBuckets(ctx); err != nil {
+			status = http.StatusServiceUnavailable
+			checks["minio"] = "error: " + err.Error()
+		} else {
+			checks["minio"] = "ok"
+		}
+	} else {
+		checks["minio"] = "disabled"
 	}
 
 	c.JSON(status, gin.H{

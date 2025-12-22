@@ -13,11 +13,13 @@ import (
 	"evening-gown/internal/cache"
 	"evening-gown/internal/config"
 	"evening-gown/internal/database"
+	"evening-gown/internal/handler/auth"
 	"evening-gown/internal/handler/health"
 	"evening-gown/internal/router"
+	"evening-gown/internal/storage"
 
-	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/redis/go-redis/v9"
+	"gorm.io/gorm"
 )
 
 // Run wires dependencies and starts the HTTP server with graceful shutdown.
@@ -30,13 +32,17 @@ func Run() error {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 
-	var db *pgxpool.Pool
+	var db *gorm.DB
 	if cfg.Postgres.DSN != "" {
-		db, err = database.NewPool(ctx, cfg.Postgres)
+		db, err = database.New(ctx, cfg.Postgres)
 		if err != nil {
 			return err
 		}
-		defer db.Close()
+		defer func() {
+			if err := database.Close(db); err != nil {
+				log.Printf("postgres close error: %v", err)
+			}
+		}()
 	} else {
 		log.Println("postgres disabled: POSTGRES_DSN not set")
 	}
@@ -56,8 +62,23 @@ func Run() error {
 		log.Println("redis disabled: REDIS_ADDR not set")
 	}
 
-	healthHandler := health.New(db, redisClient)
-	r := router.New(router.Dependencies{Health: healthHandler})
+	minioClient, err := storage.NewClient(ctx, cfg.Minio)
+	if err != nil {
+		return err
+	}
+	if minioClient == nil {
+		log.Println("minio disabled: MINIO_ENDPOINT not set")
+	}
+
+	var authHandler *auth.Handler
+	if cfg.JWT.Secret != "" {
+		authHandler = auth.New(cfg.JWT)
+	} else {
+		log.Println("jwt disabled: JWT_SECRET not set")
+	}
+
+	healthHandler := health.New(db, redisClient, minioClient)
+	r := router.New(router.Dependencies{Health: healthHandler, Auth: authHandler})
 
 	srv := &http.Server{
 		Addr:    cfg.App.Addr(),

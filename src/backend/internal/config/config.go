@@ -1,13 +1,16 @@
 package config
 
 import (
+	"bufio"
+	"errors"
+	"fmt"
 	"log"
 	"net"
 	"os"
+	"path/filepath"
 	"strconv"
+	"strings"
 	"time"
-
-	"github.com/joho/godotenv"
 )
 
 // Config aggregates application configuration.
@@ -15,6 +18,8 @@ type Config struct {
 	App      AppConfig
 	Postgres PostgresConfig
 	Redis    RedisConfig
+	Minio    MinioConfig
+	JWT      JWTConfig
 }
 
 // AppConfig controls HTTP server settings.
@@ -47,10 +52,28 @@ type RedisConfig struct {
 	DialTimeout time.Duration
 }
 
+// MinioConfig defines MinIO/S3 compatible client options.
+type MinioConfig struct {
+	Endpoint  string
+	AccessKey string
+	SecretKey string
+	Region    string
+	Bucket    string
+	UseSSL    bool
+}
+
+// JWTConfig defines JSON Web Token signing and validation settings.
+type JWTConfig struct {
+	Secret    string
+	Issuer    string
+	Audience  string
+	ExpiresIn time.Duration
+}
+
 // Load reads environment variables (optionally from .env) and returns a Config.
 func Load() (Config, error) {
 	// Attempt to load a local .env file for development. Missing file is ignored.
-	if err := godotenv.Load(); err != nil && !os.IsNotExist(err) {
+	if err := loadDotEnv(".env"); err != nil && !errors.Is(err, os.ErrNotExist) {
 		log.Printf("config: unable to load .env: %v", err)
 	}
 
@@ -66,11 +89,25 @@ func Load() (Config, error) {
 			MaxConnLifetime: getDurationEnv("POSTGRES_MAX_CONN_LIFETIME", time.Hour),
 		},
 		Redis: RedisConfig{
-			Addr:        getEnv("REDIS_ADDR", "localhost:6379"),
+			Addr:        getEnv("REDIS_ADDR", ""),
 			Password:    getEnv("REDIS_PASSWORD", ""),
 			DB:          getIntEnv("REDIS_DB", 0),
 			PoolSize:    getIntEnv("REDIS_POOL_SIZE", 10),
 			DialTimeout: getDurationEnv("REDIS_DIAL_TIMEOUT", 5*time.Second),
+		},
+		Minio: MinioConfig{
+			Endpoint:  getEnv("MINIO_ENDPOINT", ""),
+			AccessKey: getEnv("MINIO_ACCESS_KEY", ""),
+			SecretKey: getEnv("MINIO_SECRET_KEY", ""),
+			Region:    getEnv("MINIO_REGION", ""),
+			Bucket:    getEnv("MINIO_BUCKET", ""),
+			UseSSL:    getBoolEnv("MINIO_USE_SSL", false),
+		},
+		JWT: JWTConfig{
+			Secret:    getEnv("JWT_SECRET", ""),
+			Issuer:    getEnv("JWT_ISSUER", "evening-gown"),
+			Audience:  getEnv("JWT_AUDIENCE", ""),
+			ExpiresIn: getDurationEnv("JWT_EXPIRES_IN", 24*time.Hour),
 		},
 	}
 
@@ -121,6 +158,77 @@ func getDurationEnv(key string, fallback time.Duration) time.Duration {
 		return fallback
 	}
 	return value
+}
+
+func getBoolEnv(key string, fallback bool) bool {
+	raw, ok := os.LookupEnv(key)
+	if !ok || raw == "" {
+		return fallback
+	}
+
+	value, err := strconv.ParseBool(raw)
+	if err != nil {
+		log.Printf("config: %s expects bool, got %q: %v (using %t)", key, raw, err, fallback)
+		return fallback
+	}
+	return value
+}
+
+// loadDotEnv loads key=value pairs from a dotenv file into environment variables.
+//
+// It keeps existing environment variables untouched, so real env overrides .env.
+func loadDotEnv(path string) error {
+	abs, err := filepath.Abs(path)
+	if err != nil {
+		abs = path
+	}
+
+	f, err := os.Open(abs)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+
+	scanner := bufio.NewScanner(f)
+	for scanner.Scan() {
+		line := strings.TrimSpace(scanner.Text())
+		if line == "" || strings.HasPrefix(line, "#") {
+			continue
+		}
+		if strings.HasPrefix(line, "export ") {
+			line = strings.TrimSpace(strings.TrimPrefix(line, "export "))
+		}
+
+		idx := strings.IndexRune(line, '=')
+		if idx <= 0 {
+			continue
+		}
+
+		key := strings.TrimSpace(line[:idx])
+		val := strings.TrimSpace(line[idx+1:])
+		if key == "" {
+			continue
+		}
+
+		// Remove surrounding quotes.
+		if len(val) >= 2 {
+			if (val[0] == '"' && val[len(val)-1] == '"') || (val[0] == '\'' && val[len(val)-1] == '\'') {
+				val = val[1 : len(val)-1]
+			}
+		}
+
+		if _, exists := os.LookupEnv(key); exists {
+			continue
+		}
+		if err := os.Setenv(key, val); err != nil {
+			return fmt.Errorf("setenv %s: %w", key, err)
+		}
+	}
+
+	if err := scanner.Err(); err != nil {
+		return fmt.Errorf("read dotenv: %w", err)
+	}
+	return nil
 }
 
 func defaultString(value, fallback string) string {
