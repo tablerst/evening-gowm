@@ -122,7 +122,7 @@ const mobileNavItems = computed(() => [
     <div class="site-root min-h-screen bg-atelier text-charcoal">
         <nav :class="[
             'lens-nav fixed top-0 w-full z-50 px-6 md:px-10 flex justify-between items-center transition-all duration-300',
-            isNavCompacted ? 'py-3 lens-nav--compact' : 'py-5'
+            isNavCompacted ? 'lens-nav--compact' : ''
         ]">
             <RouterLink :to="{ name: 'home' }" :class="[
                 'lens-nav__brandTag',
@@ -153,8 +153,8 @@ const mobileNavItems = computed(() => [
                 </RouterLink>
             </div>
 
-            <div class="flex lg:hidden items-center gap-2 mobile-nav-actions">
-                <button class="nav-icon" type="button" @click="toggleLocale"
+            <div class="flex lg:hidden items-center gap-2">
+                <button class="nav-icon mobile-nav-actions" type="button" @click="toggleLocale"
                     :aria-label="isZhLocale ? 'Switch to English' : '切换到中文'">
                     <span class="text-[0.7rem] tracking-[0.35em]">
                         {{ isZhLocale ? 'EN' : '中' }}

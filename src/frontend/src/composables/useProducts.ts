@@ -1,6 +1,6 @@
 import { ref } from 'vue'
 
-import { httpGet } from '@/api/http'
+import { httpGet, resolveApiUrl } from '@/api/http'
 
 export type Availability = 'in_stock' | 'preorder' | 'archived'
 export type Season = 'ss25' | 'fw25'
@@ -40,8 +40,8 @@ const normalizeProduct = (raw: any): Product => {
         season: raw?.season as Season,
         category: raw?.category as Category,
         availability: raw?.availability as Availability,
-        coverImage: String(raw?.coverImage ?? raw?.cover_image ?? ''),
-        hoverImage: String(raw?.hoverImage ?? raw?.hover_image ?? ''),
+        coverImage: resolveApiUrl(String(raw?.coverImage ?? raw?.cover_image ?? '')),
+        hoverImage: resolveApiUrl(String(raw?.hoverImage ?? raw?.hover_image ?? '')),
         // Backend public JSON currently uses `isNew`; query/db uses `is_new`.
         // Be defensive to avoid silent filter failures.
         isNew: Boolean(raw?.isNew ?? raw?.is_new ?? false),

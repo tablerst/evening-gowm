@@ -19,6 +19,19 @@ const buildUrl = (path: string) => {
     return `${API_BASE}${path.startsWith('/') ? '' : '/'}${path}`
 }
 
+// resolveApiUrl converts a backend-relative API path (e.g. /api/v1/assets/...) into an
+// absolute URL using VITE_API_BASE_URL. This is mainly for <img src>, which bypasses
+// our fetch wrapper.
+export const resolveApiUrl = (maybeUrl: string) => {
+    const raw = String(maybeUrl ?? '')
+    if (!raw) return ''
+    // keep absolute / special scheme URLs unchanged
+    if (/^https?:\/\//i.test(raw) || raw.startsWith('data:') || raw.startsWith('blob:')) return raw
+    // only prefix API paths; avoid breaking normal app-relative assets
+    if (raw.startsWith('/api/')) return buildUrl(raw)
+    return raw
+}
+
 export const httpGet = async <T = unknown>(path: string, init?: RequestInit): Promise<T> => {
     const res = await fetch(buildUrl(path), {
         ...init,
@@ -44,6 +57,23 @@ export const httpPost = async <T = unknown>(path: string, body?: Json, init?: Re
             ...(init?.headers ?? {}),
         },
         body: body === undefined ? undefined : JSON.stringify(body),
+    })
+
+    const payload = await safeJson(res)
+    if (!res.ok) throw new HttpError(res.status, payload)
+    return payload as T
+}
+
+export const httpPostForm = async <T = unknown>(path: string, form: FormData, init?: RequestInit): Promise<T> => {
+    const res = await fetch(buildUrl(path), {
+        ...init,
+        method: 'POST',
+        headers: {
+            Accept: 'application/json',
+            // NOTE: do NOT set Content-Type here; the browser will set it with boundary.
+            ...(init?.headers ?? {}),
+        },
+        body: form,
     })
 
     const payload = await safeJson(res)

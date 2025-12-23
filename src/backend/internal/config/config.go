@@ -19,6 +19,7 @@ type Config struct {
 	Postgres PostgresConfig
 	Redis    RedisConfig
 	Minio    MinioConfig
+	Upload   UploadConfig
 	JWT      JWTConfig
 	Admin    AdminConfig
 	Dev      DevConfig
@@ -79,6 +80,17 @@ type MinioConfig struct {
 	Region    string
 	Bucket    string
 	UseSSL    bool
+	// PublicBaseURL is an optional base URL for building public object URLs.
+	// Example: https://cdn.example.com or https://minio.example.com
+	// When set, public object URL becomes: {PublicBaseURL}/{Bucket}/{ObjectKey}
+	PublicBaseURL string
+}
+
+// UploadConfig defines request limits for file uploads.
+type UploadConfig struct {
+	// MaxImageUploadBytes limits the uploaded image file size.
+	// Default: 1MB.
+	MaxImageUploadBytes int64
 }
 
 // JWTConfig defines JSON Web Token signing and validation settings.
@@ -121,6 +133,10 @@ func Load() (Config, error) {
 			Region:    getEnv("MINIO_REGION", ""),
 			Bucket:    getEnv("MINIO_BUCKET", ""),
 			UseSSL:    getBoolEnv("MINIO_USE_SSL", false),
+			PublicBaseURL: getEnv("MINIO_PUBLIC_BASE_URL", ""),
+		},
+		Upload: UploadConfig{
+			MaxImageUploadBytes: getInt64Env("MAX_IMAGE_UPLOAD_BYTES", 1048576),
 		},
 		JWT: JWTConfig{
 			Secret:    getEnv("JWT_SECRET", ""),
@@ -171,6 +187,19 @@ func getInt32Env(key string, fallback int32) int32 {
 		return fallback
 	}
 	return int32(value)
+}
+
+func getInt64Env(key string, fallback int64) int64 {
+	raw, ok := os.LookupEnv(key)
+	if !ok || raw == "" {
+		return fallback
+	}
+	value, err := strconv.ParseInt(raw, 10, 64)
+	if err != nil {
+		log.Printf("config: %s expects int64, got %q: %v (using %d)", key, raw, err, fallback)
+		return fallback
+	}
+	return value
 }
 
 func getDurationEnv(key string, fallback time.Duration) time.Duration {

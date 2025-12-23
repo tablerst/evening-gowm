@@ -1,4 +1,4 @@
-import { httpDelete, httpGet, httpPatch, httpPost } from '@/api/http'
+import { httpDelete, httpGet, httpPatch, httpPost, httpPostForm } from '@/api/http'
 import { getAdminToken } from '@/admin/auth'
 
 const withAuth = (): Record<string, string> => {
@@ -14,6 +14,10 @@ export const adminGet = async <T = unknown>(path: string) => {
 
 export const adminPost = async <T = unknown>(path: string, body?: unknown) => {
     return httpPost<T>(path, body as never, { headers: withAuth() })
+}
+
+export const adminPostForm = async <T = unknown>(path: string, form: FormData) => {
+    return httpPostForm<T>(path, form, { headers: withAuth() })
 }
 
 export const adminPatch = async <T = unknown>(path: string, body?: unknown) => {

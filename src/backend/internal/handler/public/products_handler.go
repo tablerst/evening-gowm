@@ -80,7 +80,7 @@ func (h *ProductsHandler) List(c *gin.Context) {
 	}
 
 	var products []model.Product
-	if err := q.Select("id, style_no, season, category, availability, cover_image_url, hover_image_url, is_new, new_rank").
+	if err := q.Select("id, style_no, season, category, availability, cover_image_url, cover_image_key, hover_image_url, hover_image_key, is_new, new_rank").
 		Order("is_new desc, new_rank desc, id desc").Limit(limit).Offset(offset).Find(&products).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "query failed"})
 		return
@@ -94,8 +94,8 @@ func (h *ProductsHandler) List(c *gin.Context) {
 			Season:       p.Season,
 			Category:     p.Category,
 			Availability: p.Availability,
-			CoverImage:   p.CoverImageURL,
-			HoverImage:   p.HoverImageURL,
+			CoverImage:   pickPublicImageURL(p.CoverImageKey, p.CoverImageURL),
+			HoverImage:   pickPublicImageURL(p.HoverImageKey, p.HoverImageURL),
 			IsNew:        p.IsNew,
 			PriceMode:    "negotiable",
 			PriceText:    "面议",
@@ -133,13 +133,21 @@ func (h *ProductsHandler) Get(c *gin.Context) {
 		"season":       p.Season,
 		"category":     p.Category,
 		"availability": p.Availability,
-		"coverImage":   p.CoverImageURL,
-		"hoverImage":   p.HoverImageURL,
+		"coverImage":   pickPublicImageURL(p.CoverImageKey, p.CoverImageURL),
+		"hoverImage":   pickPublicImageURL(p.HoverImageKey, p.HoverImageURL),
 		"isNew":        p.IsNew,
 		"priceMode":    "negotiable",
 		"priceText":    "面议",
 		"detail":       jsonOrNull(p.DetailJSON),
 	})
+}
+
+func pickPublicImageURL(objectKey string, legacyURL string) string {
+	key := strings.TrimSpace(strings.TrimPrefix(objectKey, "/"))
+	if key != "" {
+		return "/api/v1/assets/" + key
+	}
+	return strings.TrimSpace(legacyURL)
 }
 
 func parseIntQuery(c *gin.Context, key string, fallback int) int {

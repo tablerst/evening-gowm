@@ -26,6 +26,7 @@ type Dependencies struct {
 
 	// Public website APIs (no auth)
 	Public struct {
+		Assets   *publicHandlers.AssetsHandler
 		Products *publicHandlers.ProductsHandler
 		Updates  *publicHandlers.UpdatesHandler
 		Contacts *publicHandlers.ContactsHandler
@@ -35,6 +36,7 @@ type Dependencies struct {
 	// Admin backoffice APIs (JWT-protected)
 	Admin struct {
 		Auth     *adminHandlers.AuthHandler
+		Uploads  *adminHandlers.UploadsHandler
 		Products *adminHandlers.ProductsHandler
 		Updates  *adminHandlers.UpdatesHandler
 		Contacts *adminHandlers.ContactsHandler
@@ -101,8 +103,11 @@ func New(deps Dependencies) *gin.Engine {
 	}
 
 	// Public website APIs (no auth)
-	if deps.Public.Products != nil || deps.Public.Updates != nil || deps.Public.Contacts != nil || deps.Public.Events != nil {
+	if deps.Public.Assets != nil || deps.Public.Products != nil || deps.Public.Updates != nil || deps.Public.Contacts != nil || deps.Public.Events != nil {
 		api := r.Group("/api/v1")
+		if deps.Public.Assets != nil {
+			api.GET("/assets/*key", deps.Public.Assets.Get)
+		}
 		if deps.Public.Products != nil {
 			api.GET("/products", deps.Public.Products.List)
 			api.GET("/products/:id", deps.Public.Products.Get)
@@ -129,6 +134,9 @@ func New(deps Dependencies) *gin.Engine {
 		// Protected admin routes.
 		if deps.Admin.AuthMiddleware != nil {
 			admin.Use(deps.Admin.AuthMiddleware)
+		}
+		if deps.Admin.Uploads != nil {
+			admin.POST("/uploads/images", deps.Admin.Uploads.UploadImage)
 		}
 		if deps.Admin.Auth != nil {
 			admin.GET("/me", deps.Admin.Auth.Me)

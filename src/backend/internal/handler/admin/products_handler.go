@@ -32,7 +32,9 @@ type productCreateRequest struct {
 	NewRank      *int   `json:"newRank"`
 
 	CoverImageURL string `json:"coverImage"`
+	CoverImageKey string `json:"coverImageKey"`
 	HoverImageURL string `json:"hoverImage"`
+	HoverImageKey string `json:"hoverImageKey"`
 
 	Detail json.RawMessage `json:"detail"`
 }
@@ -47,7 +49,9 @@ type productUpdateRequest struct {
 	NewRank      *int    `json:"newRank"`
 
 	CoverImageURL *string `json:"coverImage"`
+	CoverImageKey *string `json:"coverImageKey"`
 	HoverImageURL *string `json:"hoverImage"`
+	HoverImageKey *string `json:"hoverImageKey"`
 
 	Detail *json.RawMessage `json:"detail"`
 }
@@ -147,7 +151,9 @@ func (h *ProductsHandler) Create(c *gin.Context) {
 		IsNew:         isNew,
 		NewRank:       newRank,
 		CoverImageURL: strings.TrimSpace(req.CoverImageURL),
+		CoverImageKey: strings.TrimSpace(req.CoverImageKey),
 		HoverImageURL: strings.TrimSpace(req.HoverImageURL),
+		HoverImageKey: strings.TrimSpace(req.HoverImageKey),
 		PriceMode:     "negotiable",
 		DetailJSON:    req.Detail,
 	}
@@ -234,14 +240,16 @@ func (h *ProductsHandler) Update(c *gin.Context) {
 		updates["new_rank"] = *req.NewRank
 	}
 	if req.CoverImageURL != nil {
-		if s := strings.TrimSpace(*req.CoverImageURL); s != "" {
-			updates["cover_image_url"] = s
-		}
+		updates["cover_image_url"] = strings.TrimSpace(*req.CoverImageURL)
+	}
+	if req.CoverImageKey != nil {
+		updates["cover_image_key"] = strings.TrimSpace(*req.CoverImageKey)
 	}
 	if req.HoverImageURL != nil {
-		if s := strings.TrimSpace(*req.HoverImageURL); s != "" {
-			updates["hover_image_url"] = s
-		}
+		updates["hover_image_url"] = strings.TrimSpace(*req.HoverImageURL)
+	}
+	if req.HoverImageKey != nil {
+		updates["hover_image_key"] = strings.TrimSpace(*req.HoverImageKey)
 	}
 	if req.Detail != nil {
 		updates["detail_json"] = *req.Detail

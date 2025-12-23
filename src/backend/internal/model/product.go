@@ -20,7 +20,9 @@ type Product struct {
 	NewRank int  `gorm:"not null;default:0" json:"newRank"`
 
 	CoverImageURL string `gorm:"type:text;not null;default:''" json:"coverImage"`
+	CoverImageKey string `gorm:"type:text;not null;default:''" json:"coverImageKey"`
 	HoverImageURL string `gorm:"type:text;not null;default:''" json:"hoverImage"`
+	HoverImageKey string `gorm:"type:text;not null;default:''" json:"hoverImageKey"`
 
 	// Negotiation-first pricing.
 	PriceMode string `gorm:"type:text;not null;default:negotiable" json:"priceMode"` // negotiable

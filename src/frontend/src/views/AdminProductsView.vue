@@ -2,8 +2,10 @@
 import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 
-import { HttpError } from '@/api/http'
+import { HttpError, resolveApiUrl } from '@/api/http'
 import { adminDelete, adminGet, adminPatch, adminPost } from '@/admin/api'
+import { appEnv } from '@/config/env'
+import { compressImageToWebpUnderLimit, uploadAdminImage, type UploadKind } from '@/composables/useAdminImageUpload'
 
 type Product = {
     id: number
@@ -15,7 +17,9 @@ type Product = {
     isNew: boolean
     newRank: number
     coverImage: string
+    coverImageKey?: string
     hoverImage: string
+    hoverImageKey?: string
     detail?: any
     publishedAt?: string
     deletedAt?: string
@@ -39,7 +43,9 @@ const editForm = ref({
     isNew: false,
     newRank: 0,
     coverImage: '',
+    coverImageKey: '',
     hoverImage: '',
+    hoverImageKey: '',
     detailJson: '{"specs":[],"option_groups":[]}',
 })
 
@@ -51,9 +57,82 @@ const form = ref({
     isNew: false,
     newRank: 0,
     coverImage: '',
+    coverImageKey: '',
     hoverImage: '',
+    hoverImageKey: '',
     detailJson: '{"specs":[],"option_groups":[]}',
 })
+
+type UploadSlotState = {
+    uploading: boolean
+    error: string
+    previewUrl: string
+}
+
+const createUpload = ref<Record<UploadKind, UploadSlotState>>({
+    cover: { uploading: false, error: '', previewUrl: '' },
+    hover: { uploading: false, error: '', previewUrl: '' },
+})
+
+const editUpload = ref<Record<UploadKind, UploadSlotState>>({
+    cover: { uploading: false, error: '', previewUrl: '' },
+    hover: { uploading: false, error: '', previewUrl: '' },
+})
+
+const revokePreview = (slot: UploadSlotState) => {
+    if (slot.previewUrl) URL.revokeObjectURL(slot.previewUrl)
+    slot.previewUrl = ''
+}
+
+const maxUploadHint = computed(() => `${Math.max(1, Math.round((appEnv.maxImageUploadBytes ?? 1048576) / 1024 / 1024))}MB`)
+
+const onPickImage = async (scope: 'create' | 'edit', kind: UploadKind, e: Event) => {
+    const input = e.target as HTMLInputElement
+    const file = input.files?.[0]
+    // reset input so picking the same file again still triggers change
+    input.value = ''
+    if (!file) return
+
+    const targetForm = scope === 'create' ? form.value : editForm.value
+    const state = scope === 'create' ? createUpload.value : editUpload.value
+    const slot = state[kind]
+
+    slot.error = ''
+    slot.uploading = true
+    try {
+        if (!targetForm.styleNo || targetForm.styleNo <= 0) {
+            slot.error = '请先填写 StyleNo（用于生成存储路径）'
+            return
+        }
+
+        const webp = await compressImageToWebpUnderLimit(file, {
+            maxBytes: appEnv.maxImageUploadBytes ?? 1048576,
+        })
+
+        revokePreview(slot)
+        slot.previewUrl = URL.createObjectURL(webp)
+
+        const res = await uploadAdminImage(kind, targetForm.styleNo, webp)
+
+        if (kind === 'cover') {
+            targetForm.coverImage = res.url
+            targetForm.coverImageKey = res.objectKey
+        } else {
+            targetForm.hoverImage = res.url
+            targetForm.hoverImageKey = res.objectKey
+        }
+    } catch (err) {
+        if (err instanceof HttpError) {
+            slot.error = `上传失败（HTTP ${err.status}）`
+        } else if (err instanceof Error) {
+            slot.error = err.message
+        } else {
+            slot.error = '上传失败'
+        }
+    } finally {
+        slot.uploading = false
+    }
+}
 
 const canSubmit = computed(() => form.value.styleNo > 0)
 
@@ -91,7 +170,9 @@ const create = async () => {
             isNew: form.value.isNew,
             newRank: form.value.newRank,
             coverImage: form.value.coverImage,
+            coverImageKey: form.value.coverImageKey,
             hoverImage: form.value.hoverImage,
+            hoverImageKey: form.value.hoverImageKey,
             detail,
         })
         await load()
@@ -117,7 +198,9 @@ const startEdit = async (id: number) => {
             isNew: !!p.isNew,
             newRank: p.newRank ?? 0,
             coverImage: p.coverImage ?? '',
+            coverImageKey: p.coverImageKey ?? '',
             hoverImage: p.hoverImage ?? '',
+            hoverImageKey: p.hoverImageKey ?? '',
             detailJson: JSON.stringify(p.detail ?? { specs: [], option_groups: [] }),
         }
     } catch (e) {
@@ -157,7 +240,9 @@ const saveEdit = async () => {
             isNew: editForm.value.isNew,
             newRank: editForm.value.newRank,
             coverImage: editForm.value.coverImage,
+            coverImageKey: editForm.value.coverImageKey,
             hoverImage: editForm.value.hoverImage,
+            hoverImageKey: editForm.value.hoverImageKey,
             detail,
         })
         editingId.value = null
@@ -245,11 +330,41 @@ onMounted(load)
                     </label>
                     <label class="block">
                         <div class="font-mono text-xs text-black/60">Cover Image URL</div>
-                        <input v-model.trim="form.coverImage" class="mt-1 w-full h-10 px-3 border border-border" />
+                        <input v-model.trim="form.coverImage" @input="form.coverImageKey = ''"
+                            class="mt-1 w-full h-10 px-3 border border-border" />
+
+                        <div class="mt-2 flex items-center gap-3">
+                            <input type="file" accept="image/*" :disabled="loading || createUpload.cover.uploading"
+                                @change="(e) => onPickImage('create', 'cover', e)" class="block w-full text-xs" />
+                            <span v-if="createUpload.cover.uploading"
+                                class="font-mono text-xs text-black/60">Uploading…</span>
+                        </div>
+                        <p class="mt-1 font-mono text-xs text-black/40">自动压缩为 WebP（≤ {{ maxUploadHint }}）并上传到 MinIO</p>
+                        <p v-if="createUpload.cover.error" class="mt-1 font-mono text-xs text-red-600">{{
+                            createUpload.cover.error }}</p>
+                        <div v-if="createUpload.cover.previewUrl || form.coverImage" class="mt-2">
+                            <img :src="createUpload.cover.previewUrl || resolveApiUrl(form.coverImage)"
+                                class="h-14 w-14 object-cover border border-border" />
+                        </div>
                     </label>
                     <label class="block">
                         <div class="font-mono text-xs text-black/60">Hover Image URL</div>
-                        <input v-model.trim="form.hoverImage" class="mt-1 w-full h-10 px-3 border border-border" />
+                        <input v-model.trim="form.hoverImage" @input="form.hoverImageKey = ''"
+                            class="mt-1 w-full h-10 px-3 border border-border" />
+
+                        <div class="mt-2 flex items-center gap-3">
+                            <input type="file" accept="image/*" :disabled="loading || createUpload.hover.uploading"
+                                @change="(e) => onPickImage('create', 'hover', e)" class="block w-full text-xs" />
+                            <span v-if="createUpload.hover.uploading"
+                                class="font-mono text-xs text-black/60">Uploading…</span>
+                        </div>
+                        <p class="mt-1 font-mono text-xs text-black/40">自动压缩为 WebP（≤ {{ maxUploadHint }}）并上传到 MinIO</p>
+                        <p v-if="createUpload.hover.error" class="mt-1 font-mono text-xs text-red-600">{{
+                            createUpload.hover.error }}</p>
+                        <div v-if="createUpload.hover.previewUrl || form.hoverImage" class="mt-2">
+                            <img :src="createUpload.hover.previewUrl || resolveApiUrl(form.hoverImage)"
+                                class="h-14 w-14 object-cover border border-border" />
+                        </div>
                     </label>
                     <label class="flex items-center gap-2 font-mono text-xs">
                         <input v-model="form.isNew" type="checkbox" />
@@ -303,11 +418,41 @@ onMounted(load)
                     </label>
                     <label class="block">
                         <div class="font-mono text-xs text-black/60">Cover Image URL</div>
-                        <input v-model.trim="editForm.coverImage" class="mt-1 w-full h-10 px-3 border border-border" />
+                        <input v-model.trim="editForm.coverImage" @input="editForm.coverImageKey = ''"
+                            class="mt-1 w-full h-10 px-3 border border-border" />
+
+                        <div class="mt-2 flex items-center gap-3">
+                            <input type="file" accept="image/*" :disabled="loading || editUpload.cover.uploading"
+                                @change="(e) => onPickImage('edit', 'cover', e)" class="block w-full text-xs" />
+                            <span v-if="editUpload.cover.uploading"
+                                class="font-mono text-xs text-black/60">Uploading…</span>
+                        </div>
+                        <p class="mt-1 font-mono text-xs text-black/40">自动压缩为 WebP（≤ {{ maxUploadHint }}）并上传到 MinIO</p>
+                        <p v-if="editUpload.cover.error" class="mt-1 font-mono text-xs text-red-600">{{
+                            editUpload.cover.error }}</p>
+                        <div v-if="editUpload.cover.previewUrl || editForm.coverImage" class="mt-2">
+                            <img :src="editUpload.cover.previewUrl || resolveApiUrl(editForm.coverImage)"
+                                class="h-14 w-14 object-cover border border-border" />
+                        </div>
                     </label>
                     <label class="block">
                         <div class="font-mono text-xs text-black/60">Hover Image URL</div>
-                        <input v-model.trim="editForm.hoverImage" class="mt-1 w-full h-10 px-3 border border-border" />
+                        <input v-model.trim="editForm.hoverImage" @input="editForm.hoverImageKey = ''"
+                            class="mt-1 w-full h-10 px-3 border border-border" />
+
+                        <div class="mt-2 flex items-center gap-3">
+                            <input type="file" accept="image/*" :disabled="loading || editUpload.hover.uploading"
+                                @change="(e) => onPickImage('edit', 'hover', e)" class="block w-full text-xs" />
+                            <span v-if="editUpload.hover.uploading"
+                                class="font-mono text-xs text-black/60">Uploading…</span>
+                        </div>
+                        <p class="mt-1 font-mono text-xs text-black/40">自动压缩为 WebP（≤ {{ maxUploadHint }}）并上传到 MinIO</p>
+                        <p v-if="editUpload.hover.error" class="mt-1 font-mono text-xs text-red-600">{{
+                            editUpload.hover.error }}</p>
+                        <div v-if="editUpload.hover.previewUrl || editForm.hoverImage" class="mt-2">
+                            <img :src="editUpload.hover.previewUrl || resolveApiUrl(editForm.hoverImage)"
+                                class="h-14 w-14 object-cover border border-border" />
+                        </div>
                     </label>
                     <label class="flex items-center gap-2 font-mono text-xs">
                         <input v-model="editForm.isNew" type="checkbox" />

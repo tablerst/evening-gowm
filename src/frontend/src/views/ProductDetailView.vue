@@ -3,7 +3,7 @@ import { computed, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 
-import { HttpError, httpGet, httpPost } from '@/api/http'
+import { HttpError, httpGet, httpPost, resolveApiUrl } from '@/api/http'
 
 type ProductDetail = {
     id: number
@@ -65,7 +65,12 @@ const load = async () => {
             errorMsg.value = t('productDetail.error')
             return
         }
-        product.value = await httpGet<ProductDetail>(`/api/v1/products/${productId.value}`)
+        const raw = await httpGet<ProductDetail>(`/api/v1/products/${productId.value}`)
+        product.value = {
+            ...raw,
+            coverImage: resolveApiUrl(raw.coverImage),
+            hoverImage: resolveApiUrl(raw.hoverImage),
+        }
     } catch (e) {
         if (e instanceof HttpError && e.status === 404) errorMsg.value = 'Not Found'
         else errorMsg.value = t('productDetail.error')
