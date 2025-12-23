@@ -5,12 +5,14 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"log"
+	"log/slog"
+	"os"
 	"time"
 
 	"evening-gown/internal/bootstrap"
 	"evening-gown/internal/config"
 	"evening-gown/internal/database"
+	"evening-gown/internal/logging"
 	"evening-gown/internal/model"
 
 	"gorm.io/gorm"
@@ -22,37 +24,49 @@ func main() {
 
 	cfg, err := config.Load()
 	if err != nil {
-		log.Fatalf("load config: %v", err)
+		slog.Error("load config", "err", err)
+		os.Exit(1)
 	}
+	logger, closeLogger, err := logging.Init(cfg.Log)
+	if err != nil {
+		slog.Error("init logger", "err", err)
+		os.Exit(1)
+	}
+	defer func() { _ = closeLogger() }()
+
 	dsn := cfg.Postgres.DSN
 	if dsn == "" {
-		log.Fatalf("POSTGRES_DSN is empty (seed requires Postgres)")
+		logger.Error("POSTGRES_DSN is empty (seed requires Postgres)")
+		os.Exit(1)
 	}
 
 	db, err := database.New(ctx, cfg.Postgres)
 	if err != nil {
-		log.Fatalf("open postgres: %v", err)
+		logger.Error("open postgres", "err", err)
+		os.Exit(1)
 	}
 	defer func() {
 		_ = database.Close(db)
 	}()
 
 	if err := bootstrap.AutoMigrate(db); err != nil {
-		log.Fatalf("auto migrate: %v", err)
+		logger.Error("auto migrate", "err", err)
+		os.Exit(1)
 	}
 
 	// Optional: bootstrap admin if requested.
 	if cfg.Admin.Email != "" && cfg.Admin.Password != "" {
 		if err := bootstrap.EnsureSingleAdmin(db, cfg.Admin.Email, cfg.Admin.Password); err != nil {
-			log.Printf("ensure admin skipped/failed: %v", err)
+			logger.Warn("ensure admin skipped/failed", "err", err)
 		}
 	}
 
 	if err := seedAll(db); err != nil {
-		log.Fatalf("seed: %v", err)
+		logger.Error("seed", "err", err)
+		os.Exit(1)
 	}
 
-	log.Println("seed completed")
+	logger.Info("seed completed")
 }
 
 func seedAll(db *gorm.DB) error {

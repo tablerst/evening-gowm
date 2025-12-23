@@ -6,6 +6,7 @@ import (
 	"strings"
 	"time"
 
+	"evening-gown/internal/logging"
 	"evening-gown/internal/model"
 
 	"github.com/gin-gonic/gin"
@@ -71,12 +72,14 @@ func (h *UpdatesHandler) List(c *gin.Context) {
 
 	var total int64
 	if err := q.Count(&total).Error; err != nil {
+		logging.ErrorWithStack(logging.FromGin(c), "admin updates query count failed", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "query failed"})
 		return
 	}
 
 	var items []model.UpdatePost
 	if err := q.Order("pinned_rank desc, published_at desc, id desc").Limit(limit).Offset(offset).Find(&items).Error; err != nil {
+		logging.ErrorWithStack(logging.FromGin(c), "admin updates query list failed", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "query failed"})
 		return
 	}

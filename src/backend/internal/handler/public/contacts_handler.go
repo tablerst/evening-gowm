@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"strings"
 
+	"evening-gown/internal/logging"
 	"evening-gown/internal/model"
 
 	"github.com/gin-gonic/gin"
@@ -66,6 +67,7 @@ func (h *ContactsHandler) Create(c *gin.Context) {
 	}
 
 	if err := h.db.WithContext(c.Request.Context()).Create(&lead).Error; err != nil {
+		logging.ErrorWithStack(logging.FromGin(c), "public contacts create failed", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "create failed"})
 		return
 	}

@@ -6,6 +6,7 @@ import (
 	"strconv"
 	"strings"
 
+	"evening-gown/internal/logging"
 	"evening-gown/internal/model"
 
 	"github.com/gin-gonic/gin"
@@ -75,6 +76,7 @@ func (h *ProductsHandler) List(c *gin.Context) {
 
 	var total int64
 	if err := q.Count(&total).Error; err != nil {
+		logging.ErrorWithStack(logging.FromGin(c), "public products query count failed", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "query failed"})
 		return
 	}
@@ -82,6 +84,7 @@ func (h *ProductsHandler) List(c *gin.Context) {
 	var products []model.Product
 	if err := q.Select("id, style_no, season, category, availability, cover_image_url, cover_image_key, hover_image_url, hover_image_key, is_new, new_rank").
 		Order("is_new desc, new_rank desc, id desc").Limit(limit).Offset(offset).Find(&products).Error; err != nil {
+		logging.ErrorWithStack(logging.FromGin(c), "public products query list failed", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "query failed"})
 		return
 	}

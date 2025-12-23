@@ -3,7 +3,6 @@ package app
 import (
 	"context"
 	"errors"
-	"log"
 	"net/http"
 	"os"
 	"os/signal"
@@ -19,6 +18,7 @@ import (
 	authHandlerPkg "evening-gown/internal/handler/auth"
 	"evening-gown/internal/handler/health"
 	publicHandlers "evening-gown/internal/handler/public"
+	"evening-gown/internal/logging"
 	"evening-gown/internal/middleware"
 	"evening-gown/internal/router"
 	"evening-gown/internal/storage"
@@ -34,6 +34,19 @@ func Run() error {
 		return err
 	}
 
+	logger, closeLogger, err := logging.Init(cfg.Log)
+	if err != nil {
+		return err
+	}
+	defer func() {
+		if closeLogger == nil {
+			return
+		}
+		if err := closeLogger(); err != nil {
+			logger.Warn("log close error", "err", err)
+		}
+	}()
+
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 
@@ -45,11 +58,11 @@ func Run() error {
 		}
 		defer func() {
 			if err := database.Close(db); err != nil {
-				log.Printf("postgres close error: %v", err)
+				logger.Warn("postgres close error", "err", err)
 			}
 		}()
 	} else {
-		log.Println("postgres disabled: POSTGRES_DSN not set")
+		logger.Info("postgres disabled: POSTGRES_DSN not set")
 	}
 
 	// JWT service (shared by admin auth middleware).
@@ -60,7 +73,7 @@ func Run() error {
 			return err
 		}
 	} else {
-		log.Println("jwt disabled: JWT_SECRET not set")
+		logger.Info("jwt disabled: JWT_SECRET not set")
 	}
 
 	var redisClient *redis.Client
@@ -71,11 +84,11 @@ func Run() error {
 		}
 		defer func() {
 			if err := redisClient.Close(); err != nil {
-				log.Printf("redis close error: %v", err)
+				logger.Warn("redis close error", "err", err)
 			}
 		}()
 	} else {
-		log.Println("redis disabled: REDIS_ADDR not set")
+		logger.Info("redis disabled: REDIS_ADDR not set")
 	}
 
 	minioClient, err := storage.NewClient(ctx, cfg.Minio)
@@ -83,7 +96,7 @@ func Run() error {
 		return err
 	}
 	if minioClient == nil {
-		log.Println("minio disabled: MINIO_ENDPOINT not set")
+		logger.Info("minio disabled: MINIO_ENDPOINT not set")
 	}
 
 	// Legacy auth handler (dev-only token issuer / verify helper).
@@ -121,7 +134,7 @@ func Run() error {
 		deps.Admin.Events = adminHandlers.NewEventsHandler(db)
 		deps.Admin.AuthMiddleware = middleware.AdminAuth(db, jwtSvc)
 	} else {
-		log.Println("business APIs disabled: postgres not configured")
+		logger.Info("business APIs disabled: postgres not configured")
 	}
 
 	r := router.New(deps)
@@ -137,11 +150,11 @@ func Run() error {
 		defer cancel()
 
 		if err := srv.Shutdown(shutdownCtx); err != nil {
-			log.Printf("server shutdown error: %v", err)
+			logger.Error("server shutdown error", "err", err)
 		}
 	}()
 
-	log.Printf("HTTP server listening on %s", srv.Addr)
+	logger.Info("HTTP server listening", "addr", srv.Addr)
 	if err := srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 		return err
 	}

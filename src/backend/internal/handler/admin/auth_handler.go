@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"evening-gown/internal/auth"
+	"evening-gown/internal/logging"
 	"evening-gown/internal/middleware"
 	"evening-gown/internal/model"
 	"evening-gown/internal/security"
@@ -73,6 +74,7 @@ func (h *AuthHandler) Login(c *gin.Context) {
 
 	token, exp, err := h.jwtSvc.IssueToken(strconv.FormatUint(uint64(user.ID), 10))
 	if err != nil {
+		logging.ErrorWithStack(logging.FromGin(c), "admin issue token failed", err, "user_id", user.ID)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "issue token failed"})
 		return
 	}

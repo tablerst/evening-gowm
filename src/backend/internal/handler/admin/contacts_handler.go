@@ -5,6 +5,7 @@ import (
 	"strconv"
 	"strings"
 
+	"evening-gown/internal/logging"
 	"evening-gown/internal/model"
 
 	"github.com/gin-gonic/gin"
@@ -44,12 +45,14 @@ func (h *ContactsHandler) List(c *gin.Context) {
 
 	var total int64
 	if err := q.Count(&total).Error; err != nil {
+		logging.ErrorWithStack(logging.FromGin(c), "admin contacts query count failed", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "query failed"})
 		return
 	}
 
 	var items []model.ContactLead
 	if err := q.Order("id desc").Limit(limit).Offset(offset).Find(&items).Error; err != nil {
+		logging.ErrorWithStack(logging.FromGin(c), "admin contacts query list failed", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "query failed"})
 		return
 	}

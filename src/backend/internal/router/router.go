@@ -14,6 +14,7 @@ import (
 	"evening-gown/internal/handler/auth"
 	"evening-gown/internal/handler/health"
 	publicHandlers "evening-gown/internal/handler/public"
+	"evening-gown/internal/middleware"
 )
 
 // Dependencies groups handlers required by the router.
@@ -49,10 +50,15 @@ type Dependencies struct {
 // New builds a gin.Engine with common middleware and routes.
 func New(deps Dependencies) *gin.Engine {
 	r := gin.New()
-	r.Use(gin.Logger(), gin.Recovery())
 
 	// Request ID (X-Request-Id). Useful for tracing and logs.
 	r.Use(requestid.New())
+	// Attach request-scoped logger (includes request_id).
+	r.Use(middleware.RequestContextLogger())
+	// Access log (one line per request).
+	r.Use(middleware.AccessLogger())
+	// Panic recovery with stack trace.
+	r.Use(middleware.Recovery())
 
 	// CORS: allow-all by default for development; customize via env if needed.
 	//

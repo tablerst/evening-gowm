@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"io"
+	"log/slog"
 	"net/http"
 	"net/http/httptest"
 	"strconv"
@@ -24,6 +25,35 @@ import (
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )
+
+func TestRouter_Recovery_LogsStackOnPanic(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	old := slog.Default()
+	defer slog.SetDefault(old)
+
+	var buf bytes.Buffer
+	slog.SetDefault(slog.New(slog.NewJSONHandler(&buf, &slog.HandlerOptions{Level: slog.LevelDebug})))
+
+	r := New(Dependencies{Health: health.New(nil, nil, nil)})
+	r.GET("/__panic", func(c *gin.Context) { panic("boom") })
+
+	resp := doRequest(t, r, http.MethodGet, "/__panic", nil, nil)
+	if resp.Code != http.StatusInternalServerError {
+		t.Fatalf("expected %d got %d: %s", http.StatusInternalServerError, resp.Code, resp.Body.String())
+	}
+
+	out := buf.String()
+	if !strings.Contains(out, "panic recovered") {
+		t.Fatalf("expected panic log; got: %s", out)
+	}
+	if !strings.Contains(out, "\"stack\"") {
+		t.Fatalf("expected stack in log; got: %s", out)
+	}
+	if !strings.Contains(out, "\"request_id\"") {
+		t.Fatalf("expected request_id in log; got: %s", out)
+	}
+}
 
 func TestRouter_Ping_ReturnsJSONAndRequestID(t *testing.T) {
 	gin.SetMode(gin.TestMode)

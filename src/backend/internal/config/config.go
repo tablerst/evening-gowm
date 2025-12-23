@@ -23,6 +23,32 @@ type Config struct {
 	JWT      JWTConfig
 	Admin    AdminConfig
 	Dev      DevConfig
+	Log      LogConfig
+}
+
+// LogConfig controls application logging.
+//
+// Env:
+// - LOG_LEVEL: debug|info|warn|error (default: info)
+// - LOG_DIR: log output directory (default: logs)
+// - LOG_FILE: log filename (default: app.log)
+// - LOG_FORMAT: json|text (default: json)
+// - LOG_TO_STDOUT: true|false (default: true)
+// - LOG_MAX_SIZE_MB: rotate when file size exceeds this (default: 50)
+// - LOG_MAX_BACKUPS: number of old log files to retain (default: 10)
+// - LOG_MAX_AGE_DAYS: max age of old log files (default: 14)
+// - LOG_COMPRESS: gzip rotated logs (default: true)
+type LogConfig struct {
+	Level    string
+	Dir      string
+	File     string
+	Format   string
+	ToStdout bool
+
+	MaxSizeMB   int
+	MaxBackups  int
+	MaxAgeDays  int
+	Compress    bool
 }
 
 // AdminConfig controls bootstrap and login for the single super admin.
@@ -150,6 +176,18 @@ func Load() (Config, error) {
 		},
 		Dev: DevConfig{
 			EnableDevTokenIssuer: getBoolEnv("ENABLE_DEV_TOKEN_ISSUER", false),
+		},
+		Log: LogConfig{
+			Level:    strings.ToLower(strings.TrimSpace(getEnv("LOG_LEVEL", "info"))),
+			Dir:      strings.TrimSpace(getEnv("LOG_DIR", "logs")),
+			File:     strings.TrimSpace(getEnv("LOG_FILE", "app.log")),
+			Format:   strings.ToLower(strings.TrimSpace(getEnv("LOG_FORMAT", "json"))),
+			ToStdout: getBoolEnv("LOG_TO_STDOUT", true),
+
+			MaxSizeMB:  getIntEnv("LOG_MAX_SIZE_MB", 50),
+			MaxBackups: getIntEnv("LOG_MAX_BACKUPS", 10),
+			MaxAgeDays: getIntEnv("LOG_MAX_AGE_DAYS", 14),
+			Compress:   getBoolEnv("LOG_COMPRESS", true),
 		},
 	}
 

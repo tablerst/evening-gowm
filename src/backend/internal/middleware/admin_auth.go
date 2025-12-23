@@ -45,6 +45,7 @@ func AdminAuth(db *gorm.DB, jwtSvc *auth.Service) gin.HandlerFunc {
 		}
 
 		c.Set(ContextUserKey, user)
+		EnrichLoggerWithAdmin(c, user)
 		c.Next()
 	}
 }

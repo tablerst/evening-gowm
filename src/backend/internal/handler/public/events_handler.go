@@ -6,6 +6,7 @@ import (
 	"strings"
 	"time"
 
+	"evening-gown/internal/logging"
 	"evening-gown/internal/model"
 
 	"github.com/gin-gonic/gin"
@@ -77,6 +78,7 @@ func (h *EventsHandler) Create(c *gin.Context) {
 	}
 
 	if err := h.db.WithContext(c.Request.Context()).Create(&e).Error; err != nil {
+		logging.ErrorWithStack(logging.FromGin(c), "public events create failed", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "create failed"})
 		return
 	}

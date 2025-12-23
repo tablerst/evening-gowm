@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	"evening-gown/internal/logging"
 	"evening-gown/internal/model"
 
 	"github.com/gin-gonic/gin"
@@ -100,12 +101,14 @@ func (h *ProductsHandler) List(c *gin.Context) {
 
 	var total int64
 	if err := q.Count(&total).Error; err != nil {
+		logging.ErrorWithStack(logging.FromGin(c), "admin products query count failed", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "query failed"})
 		return
 	}
 
 	var items []model.Product
 	if err := q.Order("is_new desc, new_rank desc, id desc").Limit(limit).Offset(offset).Find(&items).Error; err != nil {
+		logging.ErrorWithStack(logging.FromGin(c), "admin products query list failed", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "query failed"})
 		return
 	}
