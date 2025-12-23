@@ -10,6 +10,7 @@
 - Frontend development should follow the design system docs:
 	- `src/backend/frontend/DESIGN.md`
 	- `src/backend/frontend/STYLE.md`
+	- Treat mobile as a first-class target: when styling, validate small screens, touch ergonomics, and responsive breakpoints (don’t assume desktop-only layouts).
 - Backend follows Gin best practices:
 	- keep HTTP concerns in handlers/middleware
 	- **avoid passing `*gin.Context` into the business/domain layer** (extract what you need and pass explicit params instead)

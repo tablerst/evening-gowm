@@ -1,17 +1,71 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { useRoute } from 'vue-router'
 
 import { setLocale } from '@/i18n'
 import logo from '@/assets/logo.svg'
 
 const isNavCompacted = ref(false)
+const isMobileMenuOpen = ref(false)
 
 const { t, locale } = useI18n()
+const route = useRoute()
+
+const isZhLocale = computed(() => locale.value === 'zh')
 
 const localeToggleLabel = computed(() => (locale.value === 'zh' ? t('nav.language.en') : t('nav.language.zh')))
 
 let scrollHandler: (() => void) | null = null
+let previousBodyOverflow: string | null = null
+let previousBodyPaddingRight: string | null = null
+
+const closeButtonRef = ref<HTMLButtonElement | null>(null)
+
+const mobileMenuTitle = computed(() => (locale.value === 'zh' ? '导航' : 'Menu'))
+
+const onWindowKeydown = (event: KeyboardEvent) => {
+    if (event.key === 'Escape') closeMobileMenu()
+}
+
+const lockScroll = () => {
+    if (typeof window === 'undefined') return
+    if (previousBodyOverflow !== null) return
+
+    const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth
+    previousBodyOverflow = document.body.style.overflow
+    previousBodyPaddingRight = document.body.style.paddingRight
+
+    document.body.style.overflow = 'hidden'
+    if (scrollbarWidth > 0) {
+        document.body.style.paddingRight = `${scrollbarWidth}px`
+    }
+}
+
+const unlockScroll = () => {
+    if (typeof window === 'undefined') return
+    if (previousBodyOverflow === null) return
+
+    document.body.style.overflow = previousBodyOverflow
+    document.body.style.paddingRight = previousBodyPaddingRight ?? ''
+    previousBodyOverflow = null
+    previousBodyPaddingRight = null
+}
+
+const openMobileMenu = async () => {
+    isMobileMenuOpen.value = true
+    await nextTick()
+    closeButtonRef.value?.focus()
+}
+
+const closeMobileMenu = () => {
+    isMobileMenuOpen.value = false
+}
+
+const toggleMobileMenu = () => {
+    if (isMobileMenuOpen.value) closeMobileMenu()
+    else void openMobileMenu()
+}
 
 onMounted(() => {
     if (typeof window === 'undefined') return
@@ -29,11 +83,39 @@ onBeforeUnmount(() => {
         window.removeEventListener('scroll', scrollHandler)
     }
     scrollHandler = null
+    unlockScroll()
 })
 
 const toggleLocale = () => {
     setLocale(locale.value === 'zh' ? 'en' : 'zh')
 }
+
+watch(
+    () => route.fullPath,
+    () => {
+        if (isMobileMenuOpen.value) closeMobileMenu()
+    }
+)
+
+watch(isMobileMenuOpen, (open) => {
+    if (typeof window === 'undefined') return
+
+    if (open) {
+        lockScroll()
+        window.addEventListener('keydown', onWindowKeydown)
+    } else {
+        unlockScroll()
+        window.removeEventListener('keydown', onWindowKeydown)
+    }
+})
+
+const mobileNavItems = computed(() => [
+    { hash: '#process', label: t('nav.links.process') },
+    { hash: '#brief', label: t('nav.links.brief') },
+    { hash: '#seasonal', label: t('nav.links.seasonal') },
+    { hash: '#catalog', label: t('nav.links.catalog') },
+    { hash: '#contact', label: t('nav.links.appointment') },
+])
 </script>
 
 <template>
@@ -62,13 +144,78 @@ const toggleLocale = () => {
                 <RouterLink :to="{ name: 'home', hash: '#contact' }" class="nav-link">{{ t('nav.links.appointment') }}
                 </RouterLink>
             </div>
-            <div class="flex items-center gap-3">
+            <div class="hidden lg:flex items-center gap-3">
                 <button class="nav-ghost nav-link" type="button" @click="toggleLocale">
                     {{ localeToggleLabel }}
                 </button>
-                <button class="nav-ghost nav-link" type="button">{{ t('nav.cta') }}</button>
+                <RouterLink class="nav-ghost nav-link" :to="{ name: 'home', hash: '#contact' }">
+                    {{ t('nav.cta') }}
+                </RouterLink>
+            </div>
+
+            <div class="flex lg:hidden items-center gap-2 mobile-nav-actions">
+                <button class="nav-icon" type="button" @click="toggleLocale"
+                    :aria-label="isZhLocale ? 'Switch to English' : '切换到中文'">
+                    <span class="text-[0.7rem] tracking-[0.35em]">
+                        {{ isZhLocale ? 'EN' : '中' }}
+                    </span>
+                </button>
+                <button class="nav-icon" type="button" @click="toggleMobileMenu" :aria-expanded="isMobileMenuOpen"
+                    aria-controls="mobile-nav-drawer" aria-label="Menu">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"
+                        aria-hidden="true">
+                        <path d="M4 7H20" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
+                        <path d="M4 12H20" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
+                        <path d="M4 17H20" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
+                    </svg>
+                </button>
             </div>
         </nav>
+
+        <Teleport to="body">
+            <Transition name="mobile-drawer-fade">
+                <div v-if="isMobileMenuOpen" class="mobile-drawer lg:hidden" aria-hidden="false">
+                    <button class="mobile-drawer__backdrop" type="button" @click="closeMobileMenu"
+                        aria-label="Close menu"></button>
+                    <Transition name="mobile-drawer-slide">
+                        <aside v-if="isMobileMenuOpen" id="mobile-nav-drawer" class="mobile-drawer__panel" role="dialog"
+                            aria-modal="true" :aria-label="mobileMenuTitle" @click.stop>
+                            <header class="mobile-drawer__header">
+                                <span class="mobile-drawer__title">{{ mobileMenuTitle }}</span>
+                                <button ref="closeButtonRef" class="nav-icon" type="button" @click="closeMobileMenu"
+                                    aria-label="Close">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
+                                        xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                                        <path d="M6 6L18 18" stroke="currentColor" stroke-width="1.6"
+                                            stroke-linecap="round" />
+                                        <path d="M18 6L6 18" stroke="currentColor" stroke-width="1.6"
+                                            stroke-linecap="round" />
+                                    </svg>
+                                </button>
+                            </header>
+
+                            <nav class="mobile-drawer__nav" aria-label="Primary">
+                                <RouterLink v-for="item in mobileNavItems" :key="item.hash"
+                                    :to="{ name: 'home', hash: item.hash }" class="mobile-drawer__link nav-link"
+                                    @click="closeMobileMenu">
+                                    {{ item.label }}
+                                </RouterLink>
+                            </nav>
+
+                            <div class="mobile-drawer__actions">
+                                <button class="nav-ghost w-full" type="button" @click="toggleLocale">
+                                    {{ localeToggleLabel }}
+                                </button>
+                                <RouterLink class="nav-ghost nav-link w-full text-center"
+                                    :to="{ name: 'home', hash: '#contact' }" @click="closeMobileMenu">
+                                    {{ t('nav.cta') }}
+                                </RouterLink>
+                            </div>
+                        </aside>
+                    </Transition>
+                </div>
+            </Transition>
+        </Teleport>
 
         <slot />
 
