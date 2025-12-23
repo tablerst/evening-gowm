@@ -1,11 +1,30 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { useRouter } from 'vue-router'
+
+import { useProducts } from '@/composables/useProducts'
 
 const { t, te } = useI18n()
 
-// 占位数据：后续可替换为真实系列/Lookbook 数据源
-const items = computed(() => Array.from({ length: 18 }, (_, idx) => idx + 1))
+const router = useRouter()
+
+const { products, loading, error: productsError, ensureLoaded } = useProducts({ limit: 200 })
+
+onMounted(() => {
+    ensureLoaded()
+})
+
+// “特调子集”：由 is_new / isNew 决定是否展示到 Seasonal
+// 上限保持 18，避免横向滚动过长（可按需调整）
+const items = computed(() => products.value.filter((p) => p.isNew).slice(0, 18))
+
+const placeholderImage =
+    'https://images.unsplash.com/photo-1566174053879-31528523f8ae?q=80&w=800&auto=format&fit=crop&ixlib=rb-4.0.3'
+
+const goDetail = (id: number) => {
+    router.push({ name: 'product-detail', params: { id } })
+}
 
 // 端适配：PC 默认可见 5 / 最大 10；手机默认可见 3 / 最大 6
 const isDesktop = ref(false)
@@ -117,18 +136,22 @@ onBeforeUnmount(() => {
                 {{ swipeHintText }}
             </div>
             <div ref="scrollEl" class="seasonal-scroll overflow-x-auto" :style="gridStyle">
+                <div v-if="loading" class="py-8 font-mono text-xs text-gray-500">新品加载中…</div>
+                <div v-else-if="productsError" class="py-8 font-mono text-xs text-red-600">{{ productsError }}</div>
+                <div v-else-if="!items.length" class="py-8 font-mono text-xs text-gray-500">暂无新品</div>
                 <!-- 横向滑动 + 固定列数网格：每行最多 N 个（端适配），超出自动增加行数 -->
-                <div class="seasonal-grid">
-                    <div v-for="i in items" :key="i" class="seasonal-card group cursor-pointer">
+                <div v-else class="seasonal-grid">
+                    <div v-for="p in items" :key="p.id" class="seasonal-card group cursor-pointer"
+                        @click="goDetail(p.id)">
                         <div class="aspect-[3/4] bg-gray-100 relative overflow-hidden border border-border">
-                            <img :src="`https://images.unsplash.com/photo-1566174053879-31528523f8ae?q=80&w=800&auto=format&fit=crop&ixlib=rb-4.0.3`"
+                            <img :src="p.coverImage || placeholderImage"
                                 class="w-full h-full object-cover filter-cold-drama transition-transform duration-0 group-hover:scale-105" />
                             <div
                                 class="absolute inset-0 bg-[#000226] opacity-0 group-hover:opacity-20 transition-opacity duration-0 mix-blend-multiply">
                             </div>
                         </div>
                         <div class="mt-3 flex justify-between font-mono text-sm border-t border-black pt-2">
-                            <span class="font-bold">{{ t('seasonal.series', { index: i }) }}</span>
+                            <span class="font-bold">{{ t('product.style', { id: p.styleNo }) }}</span>
                             <span class="text-brand">{{ t('seasonal.lookbook') }}</span>
                         </div>
                     </div>

@@ -146,7 +146,7 @@
     gap: 0.75rem;
     width: fit-content;
     max-width: min(70vw, 520px);
-    padding-inline: 5px;
+    padding-inline: 0;
     background: #000226;
     color: #ffffff;
     border-right: 1px solid rgba(255, 255, 255, 0.14);
@@ -164,12 +164,12 @@
 
   /* 与 nav 的 py-5 / py-3 对齐：用负 margin 覆盖 nav padding，使品牌色铺满左侧区域 */
   .lens-nav__brandTag--relaxed {
-    padding-block: 1.25rem;
+    padding-block: 1rem;
     margin-block: -1.25rem;
   }
 
   .lens-nav__brandTag--compact {
-    padding-block: 0.75rem;
+    padding-block: 0.5rem;
     margin-block: -0.75rem;
   }
 
@@ -177,8 +177,8 @@
   .lens-nav__brandLogoCrop {
     display: block;
     overflow: hidden;
-    width: clamp(120px, 12vw, 160px);
-    height: clamp(60px, 5.8vw, 78px);
+    width: clamp(104px, 10.5vw, 140px);
+    height: clamp(52px, 5vw, 68px);
   }
 
   .lens-nav__brandLogo {
@@ -187,7 +187,7 @@
     height: 100%;
     object-fit: contain;
     /* 关键：抵消 SVG 顶部留白，让字样更大更清楚 */
-    transform: translateY(10%) scale(2.3);
+    transform: translateY(8%) scale(2.05);
     transform-origin: center;
   }
 

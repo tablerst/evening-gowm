@@ -3,14 +3,10 @@ import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 
-import { httpGet } from '@/api/http'
+import { useProducts, type Availability, type Category, type Product, type Season } from '@/composables/useProducts'
 
 const { t, te } = useI18n()
 const router = useRouter()
-
-type Availability = 'in_stock' | 'preorder' | 'archived'
-type Season = 'ss25' | 'fw25'
-type Category = 'gown' | 'couture' | 'bridal'
 
 const CATEGORY_OPTIONS = ['all', 'gown', 'couture', 'bridal'] as const
 type CategoryOption = (typeof CATEGORY_OPTIONS)[number]
@@ -24,28 +20,10 @@ type AvailabilityOption = (typeof AVAILABILITY_OPTIONS)[number]
 const SORT_OPTIONS = ['newest', 'style_asc', 'style_desc'] as const
 type SortKey = (typeof SORT_OPTIONS)[number]
 
-type Product = {
-    id: number
-    styleNo: number
-    season: Season
-    category: Category
-    availability: Availability
-    coverImage: string
-    hoverImage: string
-    isNew: boolean
-}
+const { products, error: productsError, ensureLoaded } = useProducts({ limit: 200 })
 
-const products = ref<Product[]>([])
-const productsError = ref('')
-
-onMounted(async () => {
-    productsError.value = ''
-    try {
-        const res = await httpGet<{ items: Product[] }>('/api/v1/products?limit=200')
-        products.value = res.items ?? []
-    } catch {
-        productsError.value = '商品加载失败'
-    }
+onMounted(() => {
+    ensureLoaded()
 })
 
 // 端适配：参考 Seasonal 的密度（PC 5 列 / 手机 3 列）
@@ -297,9 +275,9 @@ const goDetail = (id: number) => {
                             <div class="flex flex-col min-w-0">
                                 <div class="flex items-center gap-2">
                                     <span class="font-bold text-black truncate">{{ t('product.style', { id: p.styleNo })
-                                    }}</span>
+                                        }}</span>
                                     <span v-if="p.isNew" class="text-brand uppercase tracking-wider">{{ newBadgeText
-                                    }}</span>
+                                        }}</span>
                                 </div>
                                 <div class="mt-1 flex items-center gap-3 text-gray-500">
                                     <span class="text-black">{{ labelSeason(p.season) }}</span>
