@@ -30,6 +30,9 @@ type Service struct {
 type AdminClaims struct {
 	jwt.RegisteredClaims
 	PasswordUpdatedAt int64 `json:"pwd_at,omitempty"`
+	// TokenType distinguishes access vs refresh tokens.
+	// Values: "access" | "refresh". Empty means legacy access token.
+	TokenType string `json:"token_type,omitempty"`
 }
 
 func New(cfg config.JWTConfig) (*Service, error) {
@@ -92,6 +95,49 @@ func (s *Service) IssueAdminToken(subject string, passwordUpdatedAtUnix int64) (
 			NotBefore: jwt.NewNumericDate(now.Add(-30 * time.Second)),
 		},
 		PasswordUpdatedAt: passwordUpdatedAtUnix,
+		TokenType:        "access",
+	}
+	if strings.TrimSpace(s.cfg.Audience) != "" {
+		claims.Audience = jwt.ClaimStrings{s.cfg.Audience}
+	}
+
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	ss, err := token.SignedString(s.key)
+	if err != nil {
+		return "", time.Time{}, fmt.Errorf("sign token: %w", err)
+	}
+	return ss, expiresAt, nil
+}
+
+// IssueAdminRefreshToken issues a HS256 refresh token for admin usage.
+// It is meant to be exchanged for short-lived access tokens via a refresh endpoint.
+func (s *Service) IssueAdminRefreshToken(subject string, passwordUpdatedAtUnix int64) (tokenString string, expiresAt time.Time, err error) {
+	if s == nil {
+		return "", time.Time{}, ErrJWTDisabled
+	}
+	if strings.TrimSpace(subject) == "" {
+		return "", time.Time{}, fmt.Errorf("subject is empty")
+	}
+
+	ttl := s.cfg.RefreshExpiresIn
+	if ttl <= 0 {
+		ttl = 30 * 24 * time.Hour
+	}
+
+	now := time.Now()
+	expiresAt = now.Add(ttl)
+
+	claims := AdminClaims{
+		RegisteredClaims: jwt.RegisteredClaims{
+			Issuer:    s.cfg.Issuer,
+			Subject:   subject,
+			Audience:  jwt.ClaimStrings{},
+			ExpiresAt: jwt.NewNumericDate(expiresAt),
+			IssuedAt:  jwt.NewNumericDate(now),
+			NotBefore: jwt.NewNumericDate(now.Add(-30 * time.Second)),
+		},
+		PasswordUpdatedAt: passwordUpdatedAtUnix,
+		TokenType:        "refresh",
 	}
 	if strings.TrimSpace(s.cfg.Audience) != "" {
 		claims.Audience = jwt.ClaimStrings{s.cfg.Audience}
@@ -181,6 +227,55 @@ func (s *Service) ParseAdminToken(tokenString string) (*AdminClaims, error) {
 
 	claims, ok := parsed.Claims.(*AdminClaims)
 	if !ok || claims == nil {
+		return nil, ErrJWTInvalidToken
+	}
+
+	// Do not allow refresh tokens to pass as access tokens.
+	if strings.EqualFold(strings.TrimSpace(claims.TokenType), "refresh") {
+		return nil, ErrJWTInvalidToken
+	}
+
+	return claims, nil
+}
+
+// ParseAdminRefreshToken validates a refresh token and returns its claims.
+func (s *Service) ParseAdminRefreshToken(tokenString string) (*AdminClaims, error) {
+	if s == nil {
+		return nil, ErrJWTDisabled
+	}
+	tokenString = strings.TrimSpace(tokenString)
+	if tokenString == "" {
+		return nil, ErrJWTMissingToken
+	}
+
+	opts := []jwt.ParserOption{
+		jwt.WithValidMethods([]string{jwt.SigningMethodHS256.Alg()}),
+	}
+	if strings.TrimSpace(s.cfg.Issuer) != "" {
+		opts = append(opts, jwt.WithIssuer(s.cfg.Issuer))
+	}
+	if strings.TrimSpace(s.cfg.Audience) != "" {
+		opts = append(opts, jwt.WithAudience(s.cfg.Audience))
+	}
+
+	parsed, err := jwt.ParseWithClaims(tokenString, &AdminClaims{}, func(t *jwt.Token) (any, error) {
+		if t.Method == nil || t.Method.Alg() != jwt.SigningMethodHS256.Alg() {
+			return nil, fmt.Errorf("unexpected signing method: %v", t.Header["alg"])
+		}
+		return s.key, nil
+	}, opts...)
+	if err != nil {
+		return nil, fmt.Errorf("parse token: %w", err)
+	}
+	if parsed == nil || !parsed.Valid {
+		return nil, ErrJWTInvalidToken
+	}
+
+	claims, ok := parsed.Claims.(*AdminClaims)
+	if !ok || claims == nil {
+		return nil, ErrJWTInvalidToken
+	}
+	if !strings.EqualFold(strings.TrimSpace(claims.TokenType), "refresh") {
 		return nil, ErrJWTInvalidToken
 	}
 

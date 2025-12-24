@@ -109,7 +109,7 @@ func Run() error {
 
 	deps := router.Dependencies{Health: healthHandler, Auth: authHandler, EnableDevTokenIssuer: cfg.Dev.EnableDevTokenIssuer}
 	if minioClient != nil {
-		deps.Public.Assets = publicHandlers.NewAssetsHandler(minioClient, cfg.Minio)
+		deps.Public.Assets = publicHandlers.NewAssetsHandler(db, minioClient, cfg.Minio)
 	}
 
 	// Business APIs require Postgres.
@@ -127,6 +127,9 @@ func Run() error {
 		deps.Public.Events = publicHandlers.NewEventsHandler(db)
 
 		deps.Admin.Auth = adminHandlers.NewAuthHandler(db, jwtSvc)
+		if minioClient != nil {
+			deps.Admin.Assets = adminHandlers.NewAssetsHandler(db, minioClient, cfg.Minio)
+		}
 		deps.Admin.Uploads = adminHandlers.NewUploadsHandler(minioClient, cfg.Minio, cfg.Upload)
 		deps.Admin.Products = adminHandlers.NewProductsHandler(db)
 		deps.Admin.Updates = adminHandlers.NewUpdatesHandler(db)

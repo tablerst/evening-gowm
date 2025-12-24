@@ -124,7 +124,10 @@ type JWTConfig struct {
 	Secret    string
 	Issuer    string
 	Audience  string
+	// ExpiresIn is the access token lifetime.
 	ExpiresIn time.Duration
+	// RefreshExpiresIn is the refresh token lifetime.
+	RefreshExpiresIn time.Duration
 }
 
 // Load reads environment variables (optionally from .env) and returns a Config.
@@ -168,7 +171,9 @@ func Load() (Config, error) {
 			Secret:    getEnv("JWT_SECRET", ""),
 			Issuer:    getEnv("JWT_ISSUER", "evening-gown"),
 			Audience:  getEnv("JWT_AUDIENCE", ""),
-			ExpiresIn: getDurationEnv("JWT_EXPIRES_IN", 24*time.Hour),
+			// Default to a short-lived access token; use refresh tokens for long sessions.
+			ExpiresIn:        getDurationEnv("JWT_EXPIRES_IN", 15*time.Minute),
+			RefreshExpiresIn: getDurationEnv("JWT_REFRESH_EXPIRES_IN", 30*24*time.Hour),
 		},
 		Admin: AdminConfig{
 			Email:    getEnv("ADMIN_EMAIL", ""),

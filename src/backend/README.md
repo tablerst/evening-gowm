@@ -66,7 +66,8 @@ JWT（空则禁用）：
 - `JWT_SECRET`
 - `JWT_ISSUER`（默认 `evening-gown`）
 - `JWT_AUDIENCE`
-- `JWT_EXPIRES_IN`（默认 `24h`）
+- `JWT_EXPIRES_IN`（access token，默认 `15m`）
+- `JWT_REFRESH_EXPIRES_IN`（refresh token，默认 `720h`）
 
 ## 接口
 

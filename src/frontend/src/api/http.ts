@@ -47,6 +47,23 @@ export const httpGet = async <T = unknown>(path: string, init?: RequestInit): Pr
     return payload as T
 }
 
+export const httpGetBlob = async (path: string, init?: RequestInit): Promise<Blob> => {
+    const res = await fetch(buildUrl(path), {
+        ...init,
+        method: 'GET',
+        headers: {
+            ...(init?.headers ?? {}),
+        },
+    })
+
+    if (!res.ok) {
+        const payload = await safeJson(res)
+        throw new HttpError(res.status, payload)
+    }
+
+    return res.blob()
+}
+
 export const httpPost = async <T = unknown>(path: string, body?: Json, init?: RequestInit): Promise<T> => {
     const res = await fetch(buildUrl(path), {
         ...init,

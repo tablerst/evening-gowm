@@ -37,6 +37,7 @@ type Dependencies struct {
 	// Admin backoffice APIs (JWT-protected)
 	Admin struct {
 		Auth     *adminHandlers.AuthHandler
+		Assets   *adminHandlers.AssetsHandler
 		Uploads  *adminHandlers.UploadsHandler
 		Products *adminHandlers.ProductsHandler
 		Updates  *adminHandlers.UpdatesHandler
@@ -136,10 +137,15 @@ func New(deps Dependencies) *gin.Engine {
 		if deps.Admin.Auth != nil {
 			// Login is unprotected.
 			admin.POST("/auth/login", deps.Admin.Auth.Login)
+			// Refresh is unprotected (it authenticates via refresh token).
+			admin.POST("/auth/refresh", deps.Admin.Auth.Refresh)
 		}
 		// Protected admin routes.
 		if deps.Admin.AuthMiddleware != nil {
 			admin.Use(deps.Admin.AuthMiddleware)
+		}
+		if deps.Admin.Assets != nil {
+			admin.GET("/assets/*key", deps.Admin.Assets.Get)
 		}
 		if deps.Admin.Uploads != nil {
 			admin.POST("/uploads/images", deps.Admin.Uploads.UploadImage)

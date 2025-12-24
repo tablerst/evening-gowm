@@ -3,3 +3,13 @@ misc/
 
 # Deployment (do not commit real server configs)
 /deploy/nginx/nginx.conf
+
+# Environment files (DO NOT COMMIT SECRETS)
+.env
+.env.*
+!*.example
+
+# Also ignore env files inside subfolders (keep *.env.example)
+**/.env
+**/.env.*
+!**/.env.example

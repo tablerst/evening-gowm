@@ -296,9 +296,55 @@
         "status": "Status",
         "all": "all",
         "draft": "draft",
-        "published": "published"
+        "published": "published",
+        "keyword": "Keyword",
+        "keywordPlaceholder": "styleNo / slug / season / category…",
+        "season": {
+          "label": "Season",
+          "all": "all",
+          "ss25": "SS25",
+          "fw25": "FW25"
+        },
+        "category": {
+          "label": "Category",
+          "all": "all",
+          "gown": "gown",
+          "couture": "couture",
+          "bridal": "bridal"
+        },
+        "isNew": {
+          "label": "New",
+          "all": "all",
+          "true": "new only",
+          "false": "not new"
+        },
+        "availability": {
+          "label": "Availability",
+          "all": "all",
+          "in_stock": "in stock",
+          "preorder": "preorder",
+          "archived": "archived"
+        },
+        "sort": {
+          "label": "Sort",
+          "default": "default",
+          "styleAsc": "styleNo ↑",
+          "styleDesc": "styleNo ↓"
+        },
+        "reset": "Reset",
+        "count": "Showing {shown} / {total}"
       },
       "new": "New Product",
+      "actions": {
+        "loadMore": "Load more"
+      },
+      "card": {
+        "noCover": "No cover image",
+        "badgeNew": "NEW",
+        "badgePublished": "PUBLISHED",
+        "badgeDraft": "DRAFT",
+        "style": "STYLE #{styleNo}"
+      },
       "table": {
         "id": "ID",
         "styleNo": "StyleNo",

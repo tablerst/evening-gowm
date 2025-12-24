@@ -292,9 +292,55 @@
         "status": "状态",
         "all": "全部",
         "draft": "草稿",
-        "published": "已发布"
+        "published": "已发布",
+        "keyword": "关键词",
+        "keywordPlaceholder": "款号 / slug / 季节 / 品类…",
+        "season": {
+          "label": "季节",
+          "all": "全部",
+          "ss25": "SS25",
+          "fw25": "FW25"
+        },
+        "category": {
+          "label": "品类",
+          "all": "全部",
+          "gown": "礼服",
+          "couture": "高定",
+          "bridal": "婚纱"
+        },
+        "isNew": {
+          "label": "上新",
+          "all": "全部",
+          "true": "仅上新",
+          "false": "非上新"
+        },
+        "availability": {
+          "label": "库存",
+          "all": "全部",
+          "in_stock": "现货",
+          "preorder": "预售",
+          "archived": "归档"
+        },
+        "sort": {
+          "label": "排序",
+          "default": "默认",
+          "styleAsc": "款号 ↑",
+          "styleDesc": "款号 ↓"
+        },
+        "reset": "清空筛选",
+        "count": "显示 {shown} / {total}"
       },
       "new": "新建产品",
+      "actions": {
+        "loadMore": "加载更多"
+      },
+      "card": {
+        "noCover": "无封面图",
+        "badgeNew": "NEW",
+        "badgePublished": "PUBLISHED",
+        "badgeDraft": "DRAFT",
+        "style": "款号 #{styleNo}"
+      },
       "table": {
         "id": "ID",
         "styleNo": "款号",

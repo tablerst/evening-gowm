@@ -30,6 +30,10 @@ type loginRequest struct {
 	Password string `json:"password" binding:"required"`
 }
 
+type refreshRequest struct {
+	RefreshToken string `json:"refresh_token" binding:"required"`
+}
+
 type changePasswordRequest struct {
 	OldPassword string `json:"oldPassword" binding:"required"`
 	NewPassword string `json:"newPassword" binding:"required"`
@@ -74,6 +78,7 @@ func (h *AuthHandler) Login(c *gin.Context) {
 		"last_login_at":       now,
 		"failed_login_count":  0,
 		"locked_until":        nil,
+		"refresh_token_issued_at": now,
 		"updated_at":          now,
 	}).Error
 
@@ -82,16 +87,135 @@ func (h *AuthHandler) Login(c *gin.Context) {
 		pwdAt = user.PasswordUpdatedAt.UTC().Unix()
 	}
 
-	token, exp, err := h.jwtSvc.IssueAdminToken(strconv.FormatUint(uint64(user.ID), 10), pwdAt)
+	accessToken, accessExp, err := h.jwtSvc.IssueAdminToken(strconv.FormatUint(uint64(user.ID), 10), pwdAt)
 	if err != nil {
 		logging.ErrorWithStack(logging.FromGin(c), "admin issue token failed", err, "user_id", user.ID)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "issue token failed"})
 		return
 	}
 
+	refreshToken, refreshExp, err := h.jwtSvc.IssueAdminRefreshToken(strconv.FormatUint(uint64(user.ID), 10), pwdAt)
+	if err != nil {
+		logging.ErrorWithStack(logging.FromGin(c), "admin issue refresh token failed", err, "user_id", user.ID)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "issue token failed"})
+		return
+	}
+
 	c.JSON(http.StatusOK, gin.H{
-		"token":      token,
-		"expires_at": exp.UTC().Format(time.RFC3339),
+		"token":              accessToken,
+		"expires_at":         accessExp.UTC().Format(time.RFC3339),
+		"refresh_token":      refreshToken,
+		"refresh_expires_at": refreshExp.UTC().Format(time.RFC3339),
+	})
+}
+
+// Refresh exchanges a refresh token for a new access token (and rotates refresh token).
+// Route: POST /api/v1/admin/auth/refresh
+func (h *AuthHandler) Refresh(c *gin.Context) {
+	if h == nil || h.db == nil || h.jwtSvc == nil {
+		c.JSON(http.StatusServiceUnavailable, gin.H{"error": "service unavailable"})
+		return
+	}
+
+	var req refreshRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	rt := strings.TrimSpace(req.RefreshToken)
+	if rt == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid refresh_token"})
+		return
+	}
+
+	claims, err := h.jwtSvc.ParseAdminRefreshToken(rt)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+
+	uid, err := strconv.ParseUint(strings.TrimSpace(claims.Subject), 10, 64)
+	if err != nil || uid == 0 {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+
+	var user model.User
+	if err := h.db.WithContext(c.Request.Context()).Where("id = ? AND deleted_at IS NULL", uint(uid)).First(&user).Error; err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+	if user.Role != "admin" || user.Status != "active" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
+		return
+	}
+
+	// Enforce password-change logout (same logic as middleware).
+	{
+		dbPwdAt := int64(0)
+		if user.PasswordUpdatedAt != nil {
+			dbPwdAt = user.PasswordUpdatedAt.UTC().Unix()
+		}
+		if claims.PasswordUpdatedAt != 0 {
+			if claims.PasswordUpdatedAt != dbPwdAt {
+				c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+				return
+			}
+		} else if user.PasswordUpdatedAt != nil {
+			var issuedAt time.Time
+			if claims.IssuedAt != nil {
+				issuedAt = claims.IssuedAt.Time
+			}
+			if issuedAt.IsZero() || issuedAt.Before(user.PasswordUpdatedAt.UTC()) {
+				c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+				return
+			}
+		}
+	}
+
+	// Refresh token rotation guard: reject refresh tokens older than the latest issued marker.
+	if user.RefreshTokenIssuedAt != nil {
+		if claims.IssuedAt == nil {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+			return
+		}
+		if claims.IssuedAt.Time.UTC().Unix() < user.RefreshTokenIssuedAt.UTC().Unix() {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+			return
+		}
+	}
+
+	now := time.Now().UTC()
+	_ = h.db.WithContext(c.Request.Context()).Model(&model.User{}).Where("id = ?", user.ID).Updates(map[string]any{
+		"refresh_token_issued_at": now,
+		"updated_at":             now,
+	}).Error
+
+	pwdAt := int64(0)
+	if user.PasswordUpdatedAt != nil {
+		pwdAt = user.PasswordUpdatedAt.UTC().Unix()
+	}
+
+	accessToken, accessExp, err := h.jwtSvc.IssueAdminToken(strconv.FormatUint(uint64(user.ID), 10), pwdAt)
+	if err != nil {
+		logging.ErrorWithStack(logging.FromGin(c), "admin issue token failed", err, "user_id", user.ID)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "issue token failed"})
+		return
+	}
+
+	refreshToken, refreshExp, err := h.jwtSvc.IssueAdminRefreshToken(strconv.FormatUint(uint64(user.ID), 10), pwdAt)
+	if err != nil {
+		logging.ErrorWithStack(logging.FromGin(c), "admin issue refresh token failed", err, "user_id", user.ID)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "issue token failed"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"token":              accessToken,
+		"expires_at":         accessExp.UTC().Format(time.RFC3339),
+		"refresh_token":      refreshToken,
+		"refresh_expires_at": refreshExp.UTC().Format(time.RFC3339),
 	})
 }
 
@@ -164,6 +288,14 @@ func (h *AuthHandler) ChangePassword(c *gin.Context) {
 
 	// JWT iat is second-precision. Truncate to seconds so AdminAuth comparison is stable.
 	now := time.Now().UTC().Truncate(time.Second)
+	// Ensure the marker actually changes even if the request happens within the same second
+	// (common in tests / fast machines). AdminAuth compares pwd_at by equality.
+	if user.PasswordUpdatedAt != nil {
+		prev := user.PasswordUpdatedAt.UTC().Truncate(time.Second)
+		if !now.After(prev) {
+			now = prev.Add(time.Second)
+		}
+	}
 	if err := h.db.WithContext(c.Request.Context()).Model(&model.User{}).Where("id = ? AND deleted_at IS NULL", user.ID).Updates(map[string]any{
 		"password_hash":       hash,
 		"password_updated_at": &now,

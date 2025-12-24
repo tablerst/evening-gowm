@@ -18,6 +18,9 @@ type User struct {
 	LockedUntil       *time.Time `gorm:"" json:"lockedUntil,omitempty"`
 	LastLoginAt       *time.Time `gorm:"" json:"lastLoginAt,omitempty"`
 	PasswordUpdatedAt *time.Time `gorm:"" json:"passwordUpdatedAt,omitempty"`
+	// RefreshTokenIssuedAt is used to invalidate older refresh tokens after rotation.
+	// Not exposed via APIs.
+	RefreshTokenIssuedAt *time.Time `gorm:"" json:"-"`
 
 	CreatedAt time.Time  `json:"createdAt"`
 	UpdatedAt time.Time  `json:"updatedAt"`

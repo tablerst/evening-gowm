@@ -19,6 +19,7 @@
 	- Assume `.env` often **already exists locally but is not tracked by git**.
 	- Before creating a new `.env`, **check whether it already exists**, and if it does, **read it first**.
 	- Prefer updating/adding a committed `src/backend/.env.example` (safe template) instead of overwriting local `.env`.
+	- Ensure `.env` is ignored by git (repo root `.gitignore` should include `.env` / `.env.*`), while keeping `*.env.example` committed.
 	- Never put real secrets (passwords, tokens, private URLs) into `.env.example` or any committed file.
 	- If new variables are required, add them to `.env.example` with placeholders and brief comments.
 

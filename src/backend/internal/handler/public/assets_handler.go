@@ -3,21 +3,25 @@ package public
 import (
 	"net/http"
 	"path"
+	"strconv"
 	"strings"
 
 	"evening-gown/internal/config"
+	"evening-gown/internal/model"
 
 	"github.com/gin-gonic/gin"
 	"github.com/minio/minio-go/v7"
+	"gorm.io/gorm"
 )
 
 type AssetsHandler struct {
+	db         *gorm.DB
 	minioClient *minio.Client
 	minioCfg    config.MinioConfig
 }
 
-func NewAssetsHandler(minioClient *minio.Client, minioCfg config.MinioConfig) *AssetsHandler {
-	return &AssetsHandler{minioClient: minioClient, minioCfg: minioCfg}
+func NewAssetsHandler(db *gorm.DB, minioClient *minio.Client, minioCfg config.MinioConfig) *AssetsHandler {
+	return &AssetsHandler{db: db, minioClient: minioClient, minioCfg: minioCfg}
 }
 
 // Get streams an object from MinIO through the application.
@@ -69,6 +73,17 @@ func (h *AssetsHandler) Get(c *gin.Context) {
 		return
 	}
 
+	// Prevent unauthorized reads of draft/backoffice-managed images.
+	// Only allow assets that are referenced by a published product.
+	// NOTE: Admin backoffice can fetch draft assets via /api/v1/admin/assets/*key.
+	if h.db != nil {
+		ok, err := h.isPublishedProductAsset(c, cleanKey)
+		if err != nil || !ok {
+			c.JSON(http.StatusNotFound, gin.H{"error": "not found"})
+			return
+		}
+	}
+
 	ctx := c.Request.Context()
 
 	stat, err := h.minioClient.StatObject(ctx, h.minioCfg.Bucket, cleanKey, minio.StatObjectOptions{})
@@ -99,4 +114,34 @@ func (h *AssetsHandler) Get(c *gin.Context) {
 	}
 
 	c.DataFromReader(http.StatusOK, stat.Size, contentType, obj, headers)
+}
+
+func (h *AssetsHandler) isPublishedProductAsset(c *gin.Context, objectKey string) (bool, error) {
+	// products/{styleNo}/...
+	parts := strings.Split(objectKey, "/")
+	if len(parts) < 2 {
+		return false, nil
+	}
+	styleNo, err := strconv.Atoi(strings.TrimSpace(parts[1]))
+	if err != nil || styleNo <= 0 {
+		return false, nil
+	}
+
+	objectKey = strings.TrimSpace(strings.TrimPrefix(objectKey, "/"))
+	if objectKey == "" {
+		return false, nil
+	}
+
+	var cnt int64
+	err = h.db.WithContext(c.Request.Context()).Model(&model.Product{}).
+		Where("style_no = ?", styleNo).
+		Where("published_at IS NOT NULL").
+		Where("deleted_at IS NULL").
+		Where("(cover_image_key = ? OR hover_image_key = ?)", objectKey, objectKey).
+		Limit(1).
+		Count(&cnt).Error
+	if err != nil {
+		return false, err
+	}
+	return cnt > 0, nil
 }
