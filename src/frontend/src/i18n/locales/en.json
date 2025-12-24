@@ -210,5 +210,232 @@
         "title": "Paillette Clouds"
       }
     }
+  },
+  "admin": {
+    "common": {
+      "yes": "YES",
+      "no": "NO"
+    },
+    "layout": {
+      "brand": "Admin",
+      "productName": "White Phantom",
+      "backoffice": "Backoffice"
+    },
+    "nav": {
+      "dashboard": "Dashboard",
+      "products": "Products",
+      "updates": "Updates",
+      "contacts": "Contacts",
+      "events": "Events"
+    },
+    "actions": {
+      "changePassword": "Change password",
+      "logout": "Sign out",
+      "refresh": "Refresh",
+      "create": "Create",
+      "save": "Save",
+      "cancel": "Cancel",
+      "confirm": "Confirm",
+      "edit": "Edit",
+      "delete": "Delete",
+      "publish": "Publish",
+      "unpublish": "Unpublish"
+    },
+    "language": {
+      "switch": "Language",
+      "toZh": "中文",
+      "toEn": "EN"
+    },
+    "titles": {
+      "login": "Admin Login · White Phantom",
+      "home": "Admin · White Phantom",
+      "products": "Admin Products · White Phantom",
+      "updates": "Admin Updates · White Phantom",
+      "contacts": "Admin Contacts · White Phantom",
+      "events": "Admin Events · White Phantom"
+    },
+    "logoutConfirm": {
+      "title": "Confirm sign out",
+      "content": "You will be signed out from the admin.",
+      "positive": "Sign out",
+      "negative": "Cancel"
+    },
+    "password": {
+      "title": "Change password",
+      "old": "Old password",
+      "new": "New password (min 10)",
+      "confirm": "Confirm new password",
+      "errorMissing": "Please enter old and new password",
+      "errorMin": "New password must be at least 10 characters",
+      "errorMismatch": "New passwords do not match",
+      "success": "Password updated. Please sign in again.",
+      "fail": "Update failed"
+    },
+    "login": {
+      "title": "Admin Login",
+      "subtitle": "Single super admin backoffice (no multi-tenant)",
+      "email": "Email",
+      "password": "Password",
+      "submit": "Sign in",
+      "submitting": "Signing in…",
+      "errorInvalid": "Sign in failed (check email/password)",
+      "errorNetwork": "Sign in failed (network/server error)"
+    },
+    "home": {
+      "quickActions": "Quick Actions",
+      "subtitle": "Manage catalog, content, leads & analytics",
+      "sections": {
+        "catalog": "Catalog",
+        "content": "Content",
+        "leads": "Leads",
+        "analytics": "Analytics"
+      }
+    },
+    "products": {
+      "filters": {
+        "status": "Status",
+        "all": "all",
+        "draft": "draft",
+        "published": "published"
+      },
+      "new": "New Product",
+      "table": {
+        "id": "ID",
+        "styleNo": "StyleNo",
+        "season": "Season",
+        "category": "Category",
+        "isNew": "New",
+        "published": "Published",
+        "actions": "Actions"
+      },
+      "modal": {
+        "createTitle": "New Product",
+        "editTitle": "Edit #{id}"
+      },
+      "fields": {
+        "slug": "Slug",
+        "styleNo": "StyleNo",
+        "season": "Season",
+        "category": "Category",
+        "availability": "Availability",
+        "isNew": "New",
+        "newRank": "New Rank",
+        "coverImage": "Cover Image",
+        "hoverImage": "Hover Image",
+        "detailJson": "Detail JSON (options/specs)"
+      },
+      "upload": {
+        "url": "URL",
+        "uploading": "Uploading…",
+        "hint": "Auto compress to WebP (≤ {size}) and upload to MinIO",
+        "needStyleNo": "Please fill StyleNo first (for storage path)",
+        "failHttp": "Upload failed (HTTP {status})",
+        "fail": "Upload failed"
+      },
+      "errors": {
+        "load": "Failed to load",
+        "create": "Create failed (check JSON/fields)",
+        "loadDetail": "Failed to load details",
+        "detailJson": "Detail JSON is invalid",
+        "save": "Failed to save",
+        "delete": "Failed to delete",
+        "publish": "Publish failed",
+        "unpublish": "Unpublish failed"
+      },
+      "confirmDelete": "Delete product #{id}? (soft delete; invisible to site)"
+    },
+    "updates": {
+      "filters": {
+        "label": "Filter",
+        "type": {
+          "all": "all",
+          "company": "company",
+          "industry": "industry"
+        },
+        "status": {
+          "all": "all",
+          "draft": "draft",
+          "published": "published",
+          "archived": "archived"
+        }
+      },
+      "new": "New Update",
+      "modal": {
+        "createTitle": "New Update (company)",
+        "editTitle": "Edit #{id}"
+      },
+      "fields": {
+        "tag": "Tag",
+        "ref": "Ref",
+        "status": "Status",
+        "type": "Type",
+        "title": "Title",
+        "summary": "Summary",
+        "body": "Body",
+        "pinnedRank": "Pinned Rank"
+      },
+      "errors": {
+        "load": "Failed to load",
+        "create": "Create failed",
+        "loadDetail": "Failed to load details",
+        "titleRequired": "Title is required",
+        "save": "Failed to save",
+        "publish": "Publish failed",
+        "unpublish": "Unpublish failed",
+        "delete": "Failed to delete"
+      },
+      "confirmDelete": "Delete update #{id}? (soft delete; invisible to site)"
+    },
+    "contacts": {
+      "filters": {
+        "status": "Status",
+        "all": "all",
+        "new": "new",
+        "contacted": "contacted",
+        "closed": "closed"
+      },
+      "back": "Back",
+      "items": "{count} items",
+      "table": {
+        "id": "ID",
+        "created": "Created",
+        "name": "Name",
+        "phone": "Phone",
+        "wechat": "Wechat",
+        "message": "Message",
+        "source": "Source",
+        "status": "Status",
+        "actions": "Actions"
+      },
+      "errors": {
+        "load": "Failed to load",
+        "update": "Update failed",
+        "delete": "Failed to delete"
+      },
+      "confirmDelete": "Delete lead #{id}? (hard delete)"
+    },
+    "events": {
+      "back": "Back",
+      "filters": {
+        "eventType": "event_type",
+        "productId": "product_id",
+        "placeholderEventType": "poster_generated",
+        "placeholderProductId": "123"
+      },
+      "search": "Search",
+      "table": {
+        "time": "Time",
+        "type": "Type",
+        "product": "Product",
+        "page": "Page",
+        "anon": "Anon",
+        "actions": "Actions"
+      },
+      "errors": {
+        "load": "Failed to load",
+        "delete": "Failed to delete"
+      },
+      "confirmDelete": "Delete event #{id}? (hard delete)"
+    }
   }
 }

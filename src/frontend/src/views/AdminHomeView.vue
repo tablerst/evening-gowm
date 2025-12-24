@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import { useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 
 import { NCard, NGrid, NGridItem } from 'naive-ui'
 
 const router = useRouter()
+const { t } = useI18n()
 
 const go = async (name: string) => {
     await router.push({ name })
@@ -13,9 +15,9 @@ const go = async (name: string) => {
 <template>
     <div class="max-w-6xl mx-auto">
         <NCard size="large" :bordered="true">
-            <div class="font-display text-xl uppercase tracking-wider">Quick Actions</div>
+            <div class="font-display text-xl uppercase tracking-wider">{{ t('admin.home.quickActions') }}</div>
             <div class="mt-2 font-mono text-xs uppercase tracking-[0.25em] text-black/50">
-                Manage catalog, content, leads & analytics
+                {{ t('admin.home.subtitle') }}
             </div>
         </NCard>
 
@@ -23,26 +25,34 @@ const go = async (name: string) => {
             <NGrid :cols="2" :x-gap="12" :y-gap="12">
                 <NGridItem>
                     <NCard hoverable @click="go('admin-products')">
-                        <div class="font-mono text-xs uppercase tracking-[0.25em] text-black/50">Catalog</div>
-                        <div class="mt-2 font-display text-lg uppercase tracking-wider">Products</div>
+                        <div class="font-mono text-xs uppercase tracking-[0.25em] text-black/50">{{
+                            t('admin.home.sections.catalog') }}</div>
+                        <div class="mt-2 font-display text-lg uppercase tracking-wider">{{ t('admin.nav.products') }}
+                        </div>
                     </NCard>
                 </NGridItem>
                 <NGridItem>
                     <NCard hoverable @click="go('admin-updates')">
-                        <div class="font-mono text-xs uppercase tracking-[0.25em] text-black/50">Content</div>
-                        <div class="mt-2 font-display text-lg uppercase tracking-wider">Updates</div>
+                        <div class="font-mono text-xs uppercase tracking-[0.25em] text-black/50">{{
+                            t('admin.home.sections.content') }}</div>
+                        <div class="mt-2 font-display text-lg uppercase tracking-wider">{{ t('admin.nav.updates') }}
+                        </div>
                     </NCard>
                 </NGridItem>
                 <NGridItem>
                     <NCard hoverable @click="go('admin-contacts')">
-                        <div class="font-mono text-xs uppercase tracking-[0.25em] text-black/50">Leads</div>
-                        <div class="mt-2 font-display text-lg uppercase tracking-wider">Contacts</div>
+                        <div class="font-mono text-xs uppercase tracking-[0.25em] text-black/50">{{
+                            t('admin.home.sections.leads') }}</div>
+                        <div class="mt-2 font-display text-lg uppercase tracking-wider">{{ t('admin.nav.contacts') }}
+                        </div>
                     </NCard>
                 </NGridItem>
                 <NGridItem>
                     <NCard hoverable @click="go('admin-events')">
-                        <div class="font-mono text-xs uppercase tracking-[0.25em] text-black/50">Analytics</div>
-                        <div class="mt-2 font-display text-lg uppercase tracking-wider">Events</div>
+                        <div class="font-mono text-xs uppercase tracking-[0.25em] text-black/50">{{
+                            t('admin.home.sections.analytics') }}</div>
+                        <div class="mt-2 font-display text-lg uppercase tracking-wider">{{ t('admin.nav.events') }}
+                        </div>
                     </NCard>
                 </NGridItem>
             </NGrid>

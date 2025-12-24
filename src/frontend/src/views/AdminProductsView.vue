@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 
 import { NButton, NCard, NForm, NFormItem, NInput, NInputNumber, NModal, NSpace, NSwitch } from 'naive-ui'
 
@@ -28,6 +29,7 @@ type Product = {
 }
 
 const router = useRouter()
+const { t } = useI18n()
 
 const loading = ref(false)
 const errorMsg = ref('')
@@ -106,7 +108,7 @@ const onPickImage = async (scope: 'create' | 'edit', kind: UploadKind, e: Event)
     slot.uploading = true
     try {
         if (!targetForm.styleNo || targetForm.styleNo <= 0) {
-            slot.error = '请先填写 StyleNo（用于生成存储路径）'
+            slot.error = t('admin.products.upload.needStyleNo')
             return
         }
 
@@ -128,11 +130,11 @@ const onPickImage = async (scope: 'create' | 'edit', kind: UploadKind, e: Event)
         }
     } catch (err) {
         if (err instanceof HttpError) {
-            slot.error = `上传失败（HTTP ${err.status}）`
+            slot.error = t('admin.products.upload.failHttp', { status: err.status })
         } else if (err instanceof Error) {
             slot.error = err.message
         } else {
-            slot.error = '上传失败'
+            slot.error = t('admin.products.upload.fail')
         }
     } finally {
         slot.uploading = false
@@ -155,7 +157,7 @@ const load = async () => {
             await router.replace({ name: 'admin-login' })
             return
         }
-        errorMsg.value = '加载失败'
+        errorMsg.value = t('admin.products.errors.load')
     } finally {
         loading.value = false
     }
@@ -184,7 +186,7 @@ const create = async () => {
 
         showCreateModal.value = false
     } catch {
-        errorMsg.value = '创建失败（请检查 JSON 或字段）'
+        errorMsg.value = t('admin.products.errors.create')
     } finally {
         loading.value = false
     }
@@ -217,7 +219,7 @@ const startEdit = async (id: number) => {
             await router.replace({ name: 'admin-login' })
             return
         }
-        errorMsg.value = '加载详情失败'
+        errorMsg.value = t('admin.products.errors.loadDetail')
     } finally {
         loading.value = false
     }
@@ -237,7 +239,7 @@ const saveEdit = async () => {
         try {
             detail = JSON.parse(editForm.value.detailJson)
         } catch {
-            errorMsg.value = 'Detail JSON 格式错误'
+            errorMsg.value = t('admin.products.errors.detailJson')
             return
         }
 
@@ -264,14 +266,14 @@ const saveEdit = async () => {
             await router.replace({ name: 'admin-login' })
             return
         }
-        errorMsg.value = '保存失败'
+        errorMsg.value = t('admin.products.errors.save')
     } finally {
         loading.value = false
     }
 }
 
 const remove = async (id: number) => {
-    if (!confirm(`确认删除产品 #${id}？（软删除，前台将不可见）`)) return
+    if (!confirm(t('admin.products.confirmDelete', { id }))) return
     loading.value = true
     errorMsg.value = ''
     try {
@@ -283,7 +285,7 @@ const remove = async (id: number) => {
             await router.replace({ name: 'admin-login' })
             return
         }
-        errorMsg.value = '删除失败'
+        errorMsg.value = t('admin.products.errors.delete')
     } finally {
         loading.value = false
     }
@@ -300,7 +302,7 @@ const togglePublish = async (id: number, next: 'publish' | 'unpublish') => {
             await router.replace({ name: 'admin-login' })
             return
         }
-        errorMsg.value = next === 'publish' ? '发布失败' : '取消发布失败'
+        errorMsg.value = next === 'publish' ? t('admin.products.errors.publish') : t('admin.products.errors.unpublish')
     } finally {
         loading.value = false
     }
@@ -314,15 +316,18 @@ onMounted(load)
         <NCard size="large">
             <NSpace justify="space-between" align="center" :wrap="true">
                 <NSpace align="center" :size="12" :wrap="true">
-                    <div class="font-mono text-xs uppercase tracking-[0.25em] text-black/50">Status</div>
+                    <div class="font-mono text-xs uppercase tracking-[0.25em] text-black/50">{{
+                        t('admin.products.filters.status') }}</div>
                     <select v-model="filterStatus" class="h-9 px-2 border border-border font-mono text-xs">
-                        <option value="all">all</option>
-                        <option value="draft">draft</option>
-                        <option value="published">published</option>
+                        <option value="all">{{ t('admin.products.filters.all') }}</option>
+                        <option value="draft">{{ t('admin.products.filters.draft') }}</option>
+                        <option value="published">{{ t('admin.products.filters.published') }}</option>
                     </select>
-                    <NButton size="small" :loading="loading" secondary @click="load">Refresh</NButton>
+                    <NButton size="small" :loading="loading" secondary @click="load">{{ t('admin.actions.refresh') }}
+                    </NButton>
                 </NSpace>
-                <NButton size="small" type="primary" @click="showCreateModal = true">New Product</NButton>
+                <NButton size="small" type="primary" @click="showCreateModal = true">{{ t('admin.products.new') }}
+                </NButton>
             </NSpace>
 
             <p v-if="errorMsg" class="mt-3 font-mono text-xs text-red-600">{{ errorMsg }}</p>
@@ -331,13 +336,13 @@ onMounted(load)
                 <table class="min-w-full text-left font-mono text-xs">
                     <thead class="bg-border/30">
                         <tr>
-                            <th class="p-3">ID</th>
-                            <th class="p-3">StyleNo</th>
-                            <th class="p-3">Season</th>
-                            <th class="p-3">Category</th>
-                            <th class="p-3">New</th>
-                            <th class="p-3">Published</th>
-                            <th class="p-3">Actions</th>
+                            <th class="p-3">{{ t('admin.products.table.id') }}</th>
+                            <th class="p-3">{{ t('admin.products.table.styleNo') }}</th>
+                            <th class="p-3">{{ t('admin.products.table.season') }}</th>
+                            <th class="p-3">{{ t('admin.products.table.category') }}</th>
+                            <th class="p-3">{{ t('admin.products.table.isNew') }}</th>
+                            <th class="p-3">{{ t('admin.products.table.published') }}</th>
+                            <th class="p-3">{{ t('admin.products.table.actions') }}</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -346,18 +351,20 @@ onMounted(load)
                             <td class="p-3">{{ p.styleNo }}</td>
                             <td class="p-3">{{ p.season }}</td>
                             <td class="p-3">{{ p.category }}</td>
-                            <td class="p-3">{{ p.isNew ? 'YES' : 'NO' }}</td>
-                            <td class="p-3">{{ p.publishedAt ? 'YES' : 'NO' }}</td>
+                            <td class="p-3">{{ p.isNew ? t('admin.common.yes') : t('admin.common.no') }}</td>
+                            <td class="p-3">{{ p.publishedAt ? t('admin.common.yes') : t('admin.common.no') }}</td>
                             <td class="p-3">
                                 <NSpace :size="8" :wrap="true">
-                                    <NButton size="tiny" secondary :disabled="loading" @click="startEdit(p.id)">Edit
-                                    </NButton>
+                                    <NButton size="tiny" secondary :disabled="loading" @click="startEdit(p.id)">{{
+                                        t('admin.actions.edit') }}</NButton>
                                     <NButton v-if="!p.publishedAt" size="tiny" :disabled="loading"
-                                        @click="togglePublish(p.id, 'publish')">Publish</NButton>
+                                        @click="togglePublish(p.id, 'publish')">{{ t('admin.actions.publish') }}
+                                    </NButton>
                                     <NButton v-else size="tiny" secondary :disabled="loading"
-                                        @click="togglePublish(p.id, 'unpublish')">Unpublish</NButton>
+                                        @click="togglePublish(p.id, 'unpublish')">{{ t('admin.actions.unpublish') }}
+                                    </NButton>
                                     <NButton size="tiny" type="error" secondary :disabled="loading"
-                                        @click="remove(p.id)">Delete</NButton>
+                                        @click="remove(p.id)">{{ t('admin.actions.delete') }}</NButton>
                                 </NSpace>
                             </td>
                         </tr>
@@ -368,68 +375,77 @@ onMounted(load)
 
         <NModal v-model:show="showCreateModal" preset="card" style="width: min(860px, calc(100vw - 32px))">
             <template #header>
-                <div class="font-display text-lg uppercase tracking-wider">New Product</div>
+                <div class="font-display text-lg uppercase tracking-wider">{{ t('admin.products.modal.createTitle') }}
+                </div>
             </template>
             <NForm :show-feedback="false" label-placement="top">
                 <div class="grid md:grid-cols-2 gap-3">
-                    <NFormItem label="StyleNo">
+                    <NFormItem :label="t('admin.products.fields.styleNo')">
                         <NInputNumber v-model:value="form.styleNo" :min="0" />
                     </NFormItem>
-                    <NFormItem label="Season">
+                    <NFormItem :label="t('admin.products.fields.season')">
                         <NInput v-model:value="form.season" />
                     </NFormItem>
-                    <NFormItem label="Category">
+                    <NFormItem :label="t('admin.products.fields.category')">
                         <NInput v-model:value="form.category" />
                     </NFormItem>
-                    <NFormItem label="Availability">
+                    <NFormItem :label="t('admin.products.fields.availability')">
                         <NInput v-model:value="form.availability" />
                     </NFormItem>
-                    <NFormItem label="New">
+                    <NFormItem :label="t('admin.products.fields.isNew')">
                         <NSwitch v-model:value="form.isNew" />
                     </NFormItem>
-                    <NFormItem label="New Rank">
+                    <NFormItem :label="t('admin.products.fields.newRank')">
                         <NInputNumber v-model:value="form.newRank" :min="0" />
                     </NFormItem>
                 </div>
 
                 <div class="grid md:grid-cols-2 gap-3">
                     <div>
-                        <div class="font-mono text-xs uppercase tracking-[0.25em] text-black/50">Cover Image</div>
+                        <div class="font-mono text-xs uppercase tracking-[0.25em] text-black/50">{{
+                            t('admin.products.fields.coverImage') }}</div>
                         <div class="mt-2">
                             <NInput v-model:value="form.coverImage" @input="form.coverImageKey = ''"
-                                placeholder="URL" />
+                                :placeholder="t('admin.products.upload.url')" />
                         </div>
                         <div class="mt-2 flex items-center gap-3">
                             <input type="file" accept="image/*" :disabled="loading || createUpload.cover.uploading"
                                 @change="(e) => onPickImage('create', 'cover', e)" class="block w-full text-xs" />
-                            <span v-if="createUpload.cover.uploading"
-                                class="font-mono text-xs text-black/60">Uploading…</span>
+                            <span v-if="createUpload.cover.uploading" class="font-mono text-xs text-black/60">{{
+                                t('admin.products.upload.uploading') }}</span>
                         </div>
-                        <p class="mt-1 font-mono text-xs text-black/40">自动压缩为 WebP（≤ {{ maxUploadHint }}）并上传到 MinIO</p>
+                        <p class="mt-1 font-mono text-xs text-black/40">{{ t('admin.products.upload.hint', {
+                            size:
+                            maxUploadHint })
+                            }}</p>
                         <p v-if="createUpload.cover.error" class="mt-1 font-mono text-xs text-red-600">{{
                             createUpload.cover.error
-                            }}</p>
+                        }}</p>
                         <div v-if="createUpload.cover.previewUrl || form.coverImage" class="mt-2">
                             <img :src="createUpload.cover.previewUrl || resolveApiUrl(form.coverImage)"
                                 class="h-14 w-14 object-cover border border-border" />
                         </div>
                     </div>
                     <div>
-                        <div class="font-mono text-xs uppercase tracking-[0.25em] text-black/50">Hover Image</div>
+                        <div class="font-mono text-xs uppercase tracking-[0.25em] text-black/50">{{
+                            t('admin.products.fields.hoverImage') }}</div>
                         <div class="mt-2">
                             <NInput v-model:value="form.hoverImage" @input="form.hoverImageKey = ''"
-                                placeholder="URL" />
+                                :placeholder="t('admin.products.upload.url')" />
                         </div>
                         <div class="mt-2 flex items-center gap-3">
                             <input type="file" accept="image/*" :disabled="loading || createUpload.hover.uploading"
                                 @change="(e) => onPickImage('create', 'hover', e)" class="block w-full text-xs" />
-                            <span v-if="createUpload.hover.uploading"
-                                class="font-mono text-xs text-black/60">Uploading…</span>
+                            <span v-if="createUpload.hover.uploading" class="font-mono text-xs text-black/60">{{
+                                t('admin.products.upload.uploading') }}</span>
                         </div>
-                        <p class="mt-1 font-mono text-xs text-black/40">自动压缩为 WebP（≤ {{ maxUploadHint }}）并上传到 MinIO</p>
+                        <p class="mt-1 font-mono text-xs text-black/40">{{ t('admin.products.upload.hint', {
+                            size:
+                            maxUploadHint })
+                            }}</p>
                         <p v-if="createUpload.hover.error" class="mt-1 font-mono text-xs text-red-600">{{
                             createUpload.hover.error
-                            }}</p>
+                        }}</p>
                         <div v-if="createUpload.hover.previewUrl || form.hoverImage" class="mt-2">
                             <img :src="createUpload.hover.previewUrl || resolveApiUrl(form.hoverImage)"
                                 class="h-14 w-14 object-cover border border-border" />
@@ -437,85 +453,99 @@ onMounted(load)
                     </div>
                 </div>
 
-                <NFormItem label="Detail JSON (options/specs)" class="mt-3">
+                <NFormItem :label="t('admin.products.fields.detailJson')" class="mt-3">
                     <NInput v-model:value="form.detailJson" type="textarea" :autosize="{ minRows: 6, maxRows: 14 }"
                         class="font-mono text-xs" />
                 </NFormItem>
 
                 <NSpace justify="end" :size="12">
-                    <NButton secondary :disabled="loading" @click="showCreateModal = false">Cancel</NButton>
-                    <NButton type="primary" :loading="loading" :disabled="!canSubmit" @click="create">Create</NButton>
+                    <NButton secondary :disabled="loading" @click="showCreateModal = false">{{ t('admin.actions.cancel')
+                        }}
+                    </NButton>
+                    <NButton type="primary" :loading="loading" :disabled="!canSubmit" @click="create">{{
+                        t('admin.actions.create')
+                        }}</NButton>
                 </NSpace>
             </NForm>
         </NModal>
 
         <NModal v-model:show="showEditModal" preset="card" style="width: min(860px, calc(100vw - 32px))">
             <template #header>
-                <div class="font-display text-lg uppercase tracking-wider">Edit #{{ editingId }}</div>
+                <div class="font-display text-lg uppercase tracking-wider">{{ t('admin.products.modal.editTitle', {
+                    id:
+                    editingId }) }}</div>
             </template>
             <NForm :show-feedback="false" label-placement="top">
                 <div class="grid md:grid-cols-2 gap-3">
-                    <NFormItem label="Slug">
+                    <NFormItem :label="t('admin.products.fields.slug')">
                         <NInput v-model:value="editForm.slug" />
                     </NFormItem>
-                    <NFormItem label="StyleNo">
+                    <NFormItem :label="t('admin.products.fields.styleNo')">
                         <NInputNumber v-model:value="editForm.styleNo" :min="0" />
                     </NFormItem>
-                    <NFormItem label="Season">
+                    <NFormItem :label="t('admin.products.fields.season')">
                         <NInput v-model:value="editForm.season" />
                     </NFormItem>
-                    <NFormItem label="Category">
+                    <NFormItem :label="t('admin.products.fields.category')">
                         <NInput v-model:value="editForm.category" />
                     </NFormItem>
-                    <NFormItem label="Availability">
+                    <NFormItem :label="t('admin.products.fields.availability')">
                         <NInput v-model:value="editForm.availability" />
                     </NFormItem>
-                    <NFormItem label="New">
+                    <NFormItem :label="t('admin.products.fields.isNew')">
                         <NSwitch v-model:value="editForm.isNew" />
                     </NFormItem>
-                    <NFormItem label="New Rank">
+                    <NFormItem :label="t('admin.products.fields.newRank')">
                         <NInputNumber v-model:value="editForm.newRank" :min="0" />
                     </NFormItem>
                 </div>
 
                 <div class="grid md:grid-cols-2 gap-3">
                     <div>
-                        <div class="font-mono text-xs uppercase tracking-[0.25em] text-black/50">Cover Image</div>
+                        <div class="font-mono text-xs uppercase tracking-[0.25em] text-black/50">{{
+                            t('admin.products.fields.coverImage') }}</div>
                         <div class="mt-2">
                             <NInput v-model:value="editForm.coverImage" @input="editForm.coverImageKey = ''"
-                                placeholder="URL" />
+                                :placeholder="t('admin.products.upload.url')" />
                         </div>
                         <div class="mt-2 flex items-center gap-3">
                             <input type="file" accept="image/*" :disabled="loading || editUpload.cover.uploading"
                                 @change="(e) => onPickImage('edit', 'cover', e)" class="block w-full text-xs" />
-                            <span v-if="editUpload.cover.uploading"
-                                class="font-mono text-xs text-black/60">Uploading…</span>
+                            <span v-if="editUpload.cover.uploading" class="font-mono text-xs text-black/60">{{
+                                t('admin.products.upload.uploading') }}</span>
                         </div>
-                        <p class="mt-1 font-mono text-xs text-black/40">自动压缩为 WebP（≤ {{ maxUploadHint }}）并上传到 MinIO</p>
+                        <p class="mt-1 font-mono text-xs text-black/40">{{ t('admin.products.upload.hint', {
+                            size:
+                            maxUploadHint
+                            }) }}</p>
                         <p v-if="editUpload.cover.error" class="mt-1 font-mono text-xs text-red-600">{{
                             editUpload.cover.error
-                            }}</p>
+                        }}</p>
                         <div v-if="editUpload.cover.previewUrl || editForm.coverImage" class="mt-2">
                             <img :src="editUpload.cover.previewUrl || resolveApiUrl(editForm.coverImage)"
                                 class="h-14 w-14 object-cover border border-border" />
                         </div>
                     </div>
                     <div>
-                        <div class="font-mono text-xs uppercase tracking-[0.25em] text-black/50">Hover Image</div>
+                        <div class="font-mono text-xs uppercase tracking-[0.25em] text-black/50">{{
+                            t('admin.products.fields.hoverImage') }}</div>
                         <div class="mt-2">
                             <NInput v-model:value="editForm.hoverImage" @input="editForm.hoverImageKey = ''"
-                                placeholder="URL" />
+                                :placeholder="t('admin.products.upload.url')" />
                         </div>
                         <div class="mt-2 flex items-center gap-3">
                             <input type="file" accept="image/*" :disabled="loading || editUpload.hover.uploading"
                                 @change="(e) => onPickImage('edit', 'hover', e)" class="block w-full text-xs" />
-                            <span v-if="editUpload.hover.uploading"
-                                class="font-mono text-xs text-black/60">Uploading…</span>
+                            <span v-if="editUpload.hover.uploading" class="font-mono text-xs text-black/60">{{
+                                t('admin.products.upload.uploading') }}</span>
                         </div>
-                        <p class="mt-1 font-mono text-xs text-black/40">自动压缩为 WebP（≤ {{ maxUploadHint }}）并上传到 MinIO</p>
+                        <p class="mt-1 font-mono text-xs text-black/40">{{ t('admin.products.upload.hint', {
+                            size:
+                            maxUploadHint
+                            }) }}</p>
                         <p v-if="editUpload.hover.error" class="mt-1 font-mono text-xs text-red-600">{{
                             editUpload.hover.error
-                            }}</p>
+                        }}</p>
                         <div v-if="editUpload.hover.previewUrl || editForm.hoverImage" class="mt-2">
                             <img :src="editUpload.hover.previewUrl || resolveApiUrl(editForm.hoverImage)"
                                 class="h-14 w-14 object-cover border border-border" />
@@ -523,14 +553,15 @@ onMounted(load)
                     </div>
                 </div>
 
-                <NFormItem label="Detail JSON (options/specs)" class="mt-3">
+                <NFormItem :label="t('admin.products.fields.detailJson')" class="mt-3">
                     <NInput v-model:value="editForm.detailJson" type="textarea" :autosize="{ minRows: 6, maxRows: 14 }"
                         class="font-mono text-xs" />
                 </NFormItem>
 
                 <NSpace justify="end" :size="12">
-                    <NButton secondary :disabled="loading" @click="cancelEdit">Cancel</NButton>
-                    <NButton type="primary" :loading="loading" :disabled="!editingId" @click="saveEdit">Save</NButton>
+                    <NButton secondary :disabled="loading" @click="cancelEdit">{{ t('admin.actions.cancel') }}</NButton>
+                    <NButton type="primary" :loading="loading" :disabled="!editingId" @click="saveEdit">{{
+                        t('admin.actions.save') }}</NButton>
                 </NSpace>
             </NForm>
         </NModal>

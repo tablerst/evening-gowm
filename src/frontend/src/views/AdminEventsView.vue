@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 
 import { HttpError } from '@/api/http'
 import { adminDelete, adminGet } from '@/admin/api'
@@ -24,6 +25,7 @@ type EventItem = {
 }
 
 const router = useRouter()
+const { t } = useI18n()
 
 const loading = ref(false)
 const errorMsg = ref('')
@@ -48,14 +50,14 @@ const load = async () => {
             await router.replace({ name: 'admin-login' })
             return
         }
-        errorMsg.value = '加载失败'
+        errorMsg.value = t('admin.events.errors.load')
     } finally {
         loading.value = false
     }
 }
 
 const remove = async (id: number) => {
-    if (!confirm(`确认删除事件 #${id}？（硬删除）`)) return
+    if (!confirm(t('admin.events.confirmDelete', { id }))) return
     loading.value = true
     errorMsg.value = ''
     try {
@@ -66,7 +68,7 @@ const remove = async (id: number) => {
             await router.replace({ name: 'admin-login' })
             return
         }
-        errorMsg.value = '删除失败'
+        errorMsg.value = t('admin.events.errors.delete')
     } finally {
         loading.value = false
     }
@@ -79,26 +81,26 @@ onMounted(load)
     <main class="min-h-screen bg-white">
         <div class="px-6 py-10 max-w-6xl mx-auto">
             <div class="flex items-center justify-between">
-                <h1 class="font-display text-2xl uppercase tracking-wider">Events</h1>
+                <h1 class="font-display text-2xl uppercase tracking-wider">{{ t('admin.nav.events') }}</h1>
                 <router-link :to="{ name: 'admin-home' }" class="font-mono text-xs uppercase tracking-[0.25em]">←
-                    Back</router-link>
+                    {{ t('admin.events.back') }}</router-link>
             </div>
 
             <div class="mt-6 grid md:grid-cols-3 gap-3 border border-border p-4">
                 <label class="block">
-                    <div class="font-mono text-xs text-black/60">event_type</div>
+                    <div class="font-mono text-xs text-black/60">{{ t('admin.events.filters.eventType') }}</div>
                     <input v-model.trim="eventType" class="mt-1 w-full h-10 px-3 border border-border"
-                        placeholder="poster_generated" />
+                        :placeholder="t('admin.events.filters.placeholderEventType')" />
                 </label>
                 <label class="block">
-                    <div class="font-mono text-xs text-black/60">product_id</div>
+                    <div class="font-mono text-xs text-black/60">{{ t('admin.events.filters.productId') }}</div>
                     <input v-model.trim="productId" class="mt-1 w-full h-10 px-3 border border-border"
-                        placeholder="123" />
+                        :placeholder="t('admin.events.filters.placeholderProductId')" />
                 </label>
                 <div class="flex items-end">
                     <button @click="load" :disabled="loading"
                         class="h-10 px-4 bg-brand text-white font-mono text-xs uppercase tracking-[0.25em] disabled:opacity-60">
-                        Search
+                        {{ t('admin.events.search') }}
                     </button>
                 </div>
             </div>
@@ -109,12 +111,12 @@ onMounted(load)
                 <table class="min-w-full text-left font-mono text-xs">
                     <thead class="bg-border/30">
                         <tr>
-                            <th class="p-3">Time</th>
-                            <th class="p-3">Type</th>
-                            <th class="p-3">Product</th>
-                            <th class="p-3">Page</th>
-                            <th class="p-3">Anon</th>
-                            <th class="p-3">Actions</th>
+                            <th class="p-3">{{ t('admin.events.table.time') }}</th>
+                            <th class="p-3">{{ t('admin.events.table.type') }}</th>
+                            <th class="p-3">{{ t('admin.events.table.product') }}</th>
+                            <th class="p-3">{{ t('admin.events.table.page') }}</th>
+                            <th class="p-3">{{ t('admin.events.table.anon') }}</th>
+                            <th class="p-3">{{ t('admin.events.table.actions') }}</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -127,7 +129,7 @@ onMounted(load)
                             <td class="p-3">
                                 <button :disabled="loading" @click="remove(e.id)"
                                     class="h-8 px-3 border border-red-300 bg-white text-red-700 hover:border-red-500 transition-none disabled:opacity-60">
-                                    Delete
+                                    {{ t('admin.actions.delete') }}
                                 </button>
                             </td>
                         </tr>

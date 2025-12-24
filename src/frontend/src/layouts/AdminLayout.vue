@@ -1,26 +1,34 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 
 import type { MenuOption } from 'naive-ui'
-import { NButton, NCard, NConfigProvider, NDivider, NForm, NFormItem, NInput, NLayout, NLayoutContent, NLayoutHeader, NLayoutSider, NMenu, NModal, NSpace, createDiscreteApi } from 'naive-ui'
+import { NButton, NCard, NConfigProvider, NDivider, NForm, NFormItem, NInput, NLayout, NLayoutContent, NLayoutHeader, NLayoutSider, NMenu, NModal, NSpace, createDiscreteApi, dateEnUS, dateZhCN, enUS, zhCN } from 'naive-ui'
 
 import { adminMe, adminChangePassword, setAdminToken } from '@/admin/auth'
 import { adminThemeOverrides } from '@/admin/theme'
 import { HttpError } from '@/api/http'
+import { setLocale } from '@/i18n'
 
 const router = useRouter()
 const route = useRoute()
 
+const { t, locale } = useI18n()
+
 const me = ref<{ id: number; email: string; role: string } | null>(null)
 
-const menuOptions: MenuOption[] = [
-    { key: 'admin-home', label: 'Dashboard' },
-    { key: 'admin-products', label: 'Products' },
-    { key: 'admin-updates', label: 'Updates' },
-    { key: 'admin-contacts', label: 'Contacts' },
-    { key: 'admin-events', label: 'Events' },
-]
+const menuOptions = computed<MenuOption[]>(() => {
+    // ensure reactivity when locale changes
+    void locale.value
+    return [
+        { key: 'admin-home', label: t('admin.nav.dashboard') },
+        { key: 'admin-products', label: t('admin.nav.products') },
+        { key: 'admin-updates', label: t('admin.nav.updates') },
+        { key: 'admin-contacts', label: t('admin.nav.contacts') },
+        { key: 'admin-events', label: t('admin.nav.events') },
+    ]
+})
 
 const activeMenuKey = computed(() => {
     const n = route.name
@@ -28,22 +36,32 @@ const activeMenuKey = computed(() => {
 })
 
 const pageTitle = computed(() => {
+    void locale.value
     const n = activeMenuKey.value
     switch (n) {
         case 'admin-home':
-            return 'Admin'
+            return t('admin.nav.dashboard')
         case 'admin-products':
-            return 'Products'
+            return t('admin.nav.products')
         case 'admin-updates':
-            return 'Updates'
+            return t('admin.nav.updates')
         case 'admin-contacts':
-            return 'Contacts'
+            return t('admin.nav.contacts')
         case 'admin-events':
-            return 'Events'
+            return t('admin.nav.events')
         default:
-            return 'Admin'
+            return t('admin.layout.brand')
     }
 })
+
+const naiveLocale = computed(() => (locale.value === 'zh' ? zhCN : enUS))
+const naiveDateLocale = computed(() => (locale.value === 'zh' ? dateZhCN : dateEnUS))
+
+const toggleLocale = () => {
+    setLocale(locale.value === 'zh' ? 'en' : 'zh')
+}
+
+const localeToggleLabel = computed(() => (locale.value === 'zh' ? t('admin.language.toEn') : t('admin.language.toZh')))
 
 const onMenuUpdate = async (key: string) => {
     if (!key) return
@@ -99,15 +117,15 @@ const submitChangePassword = async () => {
     const confirmPassword = pwForm.value.confirmPassword.trim()
 
     if (!oldPassword || !newPassword) {
-        message.error('请输入旧密码与新密码')
+        message.error(t('admin.password.errorMissing'))
         return
     }
     if (newPassword.length < 10) {
-        message.error('新密码至少 10 位')
+        message.error(t('admin.password.errorMin'))
         return
     }
     if (newPassword !== confirmPassword) {
-        message.error('两次输入的新密码不一致')
+        message.error(t('admin.password.errorMismatch'))
         return
     }
 
@@ -115,7 +133,7 @@ const submitChangePassword = async () => {
     try {
         await adminChangePassword(oldPassword, newPassword)
         showChangePassword.value = false
-        message.success('密码已更新，请重新登录')
+        message.success(t('admin.password.success'))
         await forceLogout()
     } catch (e) {
         if (e instanceof HttpError && (e.status === 401 || e.status === 403)) {
@@ -123,7 +141,7 @@ const submitChangePassword = async () => {
             return
         }
         const payload = (e instanceof HttpError ? e.payload : null) as any
-        const msg = payload && typeof payload === 'object' && typeof payload.error === 'string' ? payload.error : '修改失败'
+        const msg = payload && typeof payload === 'object' && typeof payload.error === 'string' ? payload.error : t('admin.password.fail')
         message.error(msg)
     } finally {
         changing.value = false
@@ -132,24 +150,24 @@ const submitChangePassword = async () => {
 
 const confirmLogout = () => {
     dialog.warning({
-        title: '确认退出',
-        content: '你将退出后台登录状态。',
-        positiveText: '退出',
-        negativeText: '取消',
+        title: t('admin.logoutConfirm.title'),
+        content: t('admin.logoutConfirm.content'),
+        positiveText: t('admin.logoutConfirm.positive'),
+        negativeText: t('admin.logoutConfirm.negative'),
         onPositiveClick: () => void forceLogout(),
     })
 }
 </script>
 
 <template>
-    <NConfigProvider :theme-overrides="adminThemeOverrides">
+    <NConfigProvider :theme-overrides="adminThemeOverrides" :locale="naiveLocale" :date-locale="naiveDateLocale">
         <div class="min-h-screen bg-white text-black">
             <NLayout has-sider class="min-h-screen">
                 <NLayoutSider bordered collapse-mode="width" :collapsed-width="64" :width="220">
                     <div class="px-4 py-4">
-                        <div class="font-display text-lg uppercase tracking-wider">Admin</div>
+                        <div class="font-display text-lg uppercase tracking-wider">{{ t('admin.layout.brand') }}</div>
                         <div class="mt-1 font-mono text-[11px] uppercase tracking-[0.25em] text-black/50">
-                            White Phantom
+                            {{ t('admin.layout.productName') }}
                         </div>
                     </div>
                     <NDivider style="margin: 0" />
@@ -163,7 +181,7 @@ const confirmLogout = () => {
                         <div class="h-full px-6 flex items-center justify-between gap-4">
                             <div class="min-w-0">
                                 <div class="font-mono text-xs uppercase tracking-[0.25em] text-black/50">
-                                    Backoffice
+                                    {{ t('admin.layout.backoffice') }}
                                 </div>
                                 <div class="font-display text-lg uppercase tracking-wider truncate">{{ pageTitle }}
                                 </div>
@@ -173,8 +191,10 @@ const confirmLogout = () => {
                                 <div class="hidden md:block font-mono text-xs text-black/60" v-if="me">
                                     {{ me.email }} · {{ me.role }}
                                 </div>
-                                <NButton size="small" secondary @click="openChangePassword">修改密码</NButton>
-                                <NButton size="small" @click="confirmLogout">退出</NButton>
+                                <NButton size="small" secondary @click="toggleLocale">{{ localeToggleLabel }}</NButton>
+                                <NButton size="small" secondary @click="openChangePassword">{{
+                                    t('admin.actions.changePassword') }}</NButton>
+                                <NButton size="small" @click="confirmLogout">{{ t('admin.actions.logout') }}</NButton>
                             </NSpace>
                         </div>
                     </NLayoutHeader>
@@ -189,26 +209,30 @@ const confirmLogout = () => {
 
             <NModal v-model:show="showChangePassword" preset="card" style="width: min(560px, calc(100vw - 32px))">
                 <template #header>
-                    <div class="font-display text-lg uppercase tracking-wider">修改密码</div>
+                    <div class="font-display text-lg uppercase tracking-wider">{{ t('admin.password.title') }}</div>
                 </template>
 
                 <NCard :bordered="false" style="padding: 0">
                     <NForm :show-feedback="false" :show-label="true" label-placement="top">
-                        <NFormItem label="旧密码">
+                        <NFormItem :label="t('admin.password.old')">
                             <NInput v-model:value="pwForm.oldPassword" type="password"
                                 autocomplete="current-password" />
                         </NFormItem>
-                        <NFormItem label="新密码（至少 10 位）">
+                        <NFormItem :label="t('admin.password.new')">
                             <NInput v-model:value="pwForm.newPassword" type="password" autocomplete="new-password" />
                         </NFormItem>
-                        <NFormItem label="确认新密码">
+                        <NFormItem :label="t('admin.password.confirm')">
                             <NInput v-model:value="pwForm.confirmPassword" type="password"
                                 autocomplete="new-password" />
                         </NFormItem>
 
                         <NSpace justify="end" :size="12">
-                            <NButton secondary :disabled="changing" @click="showChangePassword = false">取消</NButton>
-                            <NButton type="primary" :loading="changing" @click="submitChangePassword">确认修改</NButton>
+                            <NButton secondary :disabled="changing" @click="showChangePassword = false">{{
+                                t('admin.actions.cancel') }}
+                            </NButton>
+                            <NButton type="primary" :loading="changing" @click="submitChangePassword">{{
+                                t('admin.actions.confirm') }}
+                            </NButton>
                         </NSpace>
                     </NForm>
                 </NCard>

@@ -1,8 +1,10 @@
+import { watch } from 'vue'
 import { createRouter, createWebHistory } from 'vue-router'
 import type { RouteRecordRaw } from 'vue-router'
 
 import { appEnv } from '@/config/env'
 import { getAdminToken } from '@/admin/auth'
+import { i18n } from '@/i18n'
 
 const routes: RouteRecordRaw[] = [
     {
@@ -58,7 +60,7 @@ const routes: RouteRecordRaw[] = [
         component: () => import('../views/AdminLoginView.vue'),
         meta: {
             layout: 'blank',
-            title: 'Admin Login · White Phantom',
+            titleKey: 'admin.titles.login',
         },
     },
     {
@@ -67,7 +69,7 @@ const routes: RouteRecordRaw[] = [
         component: () => import('../views/AdminHomeView.vue'),
         meta: {
             layout: 'admin',
-            title: 'Admin · White Phantom',
+            titleKey: 'admin.titles.home',
         },
     },
     {
@@ -76,7 +78,7 @@ const routes: RouteRecordRaw[] = [
         component: () => import('../views/AdminProductsView.vue'),
         meta: {
             layout: 'admin',
-            title: 'Admin Products · White Phantom',
+            titleKey: 'admin.titles.products',
         },
     },
     {
@@ -85,7 +87,7 @@ const routes: RouteRecordRaw[] = [
         component: () => import('../views/AdminUpdatesView.vue'),
         meta: {
             layout: 'admin',
-            title: 'Admin Updates · White Phantom',
+            titleKey: 'admin.titles.updates',
         },
     },
     {
@@ -94,7 +96,7 @@ const routes: RouteRecordRaw[] = [
         component: () => import('../views/AdminContactsView.vue'),
         meta: {
             layout: 'admin',
-            title: 'Admin Contacts · White Phantom',
+            titleKey: 'admin.titles.contacts',
         },
     },
     {
@@ -103,7 +105,7 @@ const routes: RouteRecordRaw[] = [
         component: () => import('../views/AdminEventsView.vue'),
         meta: {
             layout: 'admin',
-            title: 'Admin Events · White Phantom',
+            titleKey: 'admin.titles.events',
         },
     },
     {
@@ -147,13 +149,28 @@ router.beforeEach((to) => {
     }
 })
 
-router.afterEach((to) => {
+const setDocumentTitle = (to: any) => {
     if (typeof document === 'undefined') return
 
-    const title = typeof to.meta.title === 'string' ? to.meta.title : null
+    const titleKey = typeof to?.meta?.titleKey === 'string' ? (to.meta.titleKey as string) : null
+    if (titleKey) {
+        document.title = i18n.global.t(titleKey)
+        return
+    }
+
+    const title = typeof to?.meta?.title === 'string' ? (to.meta.title as string) : null
     if (title) {
         document.title = title
     }
+}
+
+router.afterEach((to) => {
+    setDocumentTitle(to)
+})
+
+// When locale changes, keep title in sync without requiring navigation.
+watch(i18n.global.locale, () => {
+    setDocumentTitle(router.currentRoute.value)
 })
 
 export default router

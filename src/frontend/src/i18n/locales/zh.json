@@ -206,5 +206,232 @@
         "title": "Paillette Clouds"
       }
     }
+  },
+  "admin": {
+    "common": {
+      "yes": "是",
+      "no": "否"
+    },
+    "layout": {
+      "brand": "后台",
+      "productName": "White Phantom",
+      "backoffice": "后台"
+    },
+    "nav": {
+      "dashboard": "仪表盘",
+      "products": "产品",
+      "updates": "动态",
+      "contacts": "咨询",
+      "events": "事件"
+    },
+    "actions": {
+      "changePassword": "修改密码",
+      "logout": "退出",
+      "refresh": "刷新",
+      "create": "创建",
+      "save": "保存",
+      "cancel": "取消",
+      "confirm": "确认",
+      "edit": "编辑",
+      "delete": "删除",
+      "publish": "发布",
+      "unpublish": "取消发布"
+    },
+    "language": {
+      "switch": "语言",
+      "toZh": "中文",
+      "toEn": "EN"
+    },
+    "titles": {
+      "login": "后台登录 · White Phantom",
+      "home": "后台 · White Phantom",
+      "products": "后台产品 · White Phantom",
+      "updates": "后台动态 · White Phantom",
+      "contacts": "后台咨询 · White Phantom",
+      "events": "后台事件 · White Phantom"
+    },
+    "logoutConfirm": {
+      "title": "确认退出",
+      "content": "你将退出后台登录状态。",
+      "positive": "退出",
+      "negative": "取消"
+    },
+    "password": {
+      "title": "修改密码",
+      "old": "旧密码",
+      "new": "新密码（至少 10 位）",
+      "confirm": "确认新密码",
+      "errorMissing": "请输入旧密码与新密码",
+      "errorMin": "新密码至少 10 位",
+      "errorMismatch": "两次输入的新密码不一致",
+      "success": "密码已更新，请重新登录",
+      "fail": "修改失败"
+    },
+    "login": {
+      "title": "后台登录",
+      "subtitle": "单一超级管理员后台（无多租户）",
+      "email": "邮箱",
+      "password": "密码",
+      "submit": "登录",
+      "submitting": "登录中…",
+      "errorInvalid": "登录失败（请检查账号或密码）",
+      "errorNetwork": "登录失败（网络或服务器错误）"
+    },
+    "home": {
+      "quickActions": "快捷入口",
+      "subtitle": "管理产品、内容、线索与数据",
+      "sections": {
+        "catalog": "产品库",
+        "content": "内容",
+        "leads": "线索",
+        "analytics": "数据"
+      }
+    },
+    "products": {
+      "filters": {
+        "status": "状态",
+        "all": "全部",
+        "draft": "草稿",
+        "published": "已发布"
+      },
+      "new": "新建产品",
+      "table": {
+        "id": "ID",
+        "styleNo": "款号",
+        "season": "季节",
+        "category": "品类",
+        "isNew": "上新",
+        "published": "已发布",
+        "actions": "操作"
+      },
+      "modal": {
+        "createTitle": "新建产品",
+        "editTitle": "编辑 #{id}"
+      },
+      "fields": {
+        "slug": "Slug",
+        "styleNo": "款号",
+        "season": "季节",
+        "category": "品类",
+        "availability": "库存状态",
+        "isNew": "上新",
+        "newRank": "上新排序",
+        "coverImage": "封面图",
+        "hoverImage": "悬停图",
+        "detailJson": "Detail JSON（options/specs）"
+      },
+      "upload": {
+        "url": "URL",
+        "uploading": "上传中…",
+        "hint": "自动压缩为 WebP（≤ {size}）并上传到 MinIO",
+        "needStyleNo": "请先填写 StyleNo（用于生成存储路径）",
+        "failHttp": "上传失败（HTTP {status}）",
+        "fail": "上传失败"
+      },
+      "errors": {
+        "load": "加载失败",
+        "create": "创建失败（请检查 JSON 或字段）",
+        "loadDetail": "加载详情失败",
+        "detailJson": "Detail JSON 格式错误",
+        "save": "保存失败",
+        "delete": "删除失败",
+        "publish": "发布失败",
+        "unpublish": "取消发布失败"
+      },
+      "confirmDelete": "确认删除产品 #{id}？（软删除，前台将不可见）"
+    },
+    "updates": {
+      "filters": {
+        "label": "筛选",
+        "type": {
+          "all": "全部",
+          "company": "公司",
+          "industry": "行业"
+        },
+        "status": {
+          "all": "全部",
+          "draft": "草稿",
+          "published": "已发布",
+          "archived": "归档"
+        }
+      },
+      "new": "新建动态",
+      "modal": {
+        "createTitle": "新建动态（公司）",
+        "editTitle": "编辑 #{id}"
+      },
+      "fields": {
+        "tag": "标签",
+        "ref": "Ref",
+        "status": "状态",
+        "type": "类型",
+        "title": "标题",
+        "summary": "摘要",
+        "body": "正文",
+        "pinnedRank": "置顶排序"
+      },
+      "errors": {
+        "load": "加载失败",
+        "create": "创建失败",
+        "loadDetail": "加载详情失败",
+        "titleRequired": "标题不能为空",
+        "save": "保存失败",
+        "publish": "发布失败",
+        "unpublish": "取消发布失败",
+        "delete": "删除失败"
+      },
+      "confirmDelete": "确认删除动态 #{id}？（软删除，前台将不可见）"
+    },
+    "contacts": {
+      "filters": {
+        "status": "状态",
+        "all": "全部",
+        "new": "新线索",
+        "contacted": "已联系",
+        "closed": "已关闭"
+      },
+      "back": "返回",
+      "items": "{count} 条",
+      "table": {
+        "id": "ID",
+        "created": "时间",
+        "name": "姓名",
+        "phone": "电话",
+        "wechat": "微信",
+        "message": "留言",
+        "source": "来源",
+        "status": "状态",
+        "actions": "操作"
+      },
+      "errors": {
+        "load": "加载失败",
+        "update": "更新失败",
+        "delete": "删除失败"
+      },
+      "confirmDelete": "确认删除线索 #{id}？（硬删除）"
+    },
+    "events": {
+      "back": "返回",
+      "filters": {
+        "eventType": "event_type",
+        "productId": "product_id",
+        "placeholderEventType": "poster_generated",
+        "placeholderProductId": "123"
+      },
+      "search": "搜索",
+      "table": {
+        "time": "时间",
+        "type": "类型",
+        "product": "产品",
+        "page": "页面",
+        "anon": "匿名",
+        "actions": "操作"
+      },
+      "errors": {
+        "load": "加载失败",
+        "delete": "删除失败"
+      },
+      "confirmDelete": "确认删除事件 #{id}？（硬删除）"
+    }
   }
 }

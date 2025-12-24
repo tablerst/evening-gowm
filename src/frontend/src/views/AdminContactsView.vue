@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 
 import { HttpError } from '@/api/http'
 import { adminDelete, adminGet, adminPatch } from '@/admin/api'
@@ -22,6 +23,7 @@ type ContactLead = {
 }
 
 const router = useRouter()
+const { t } = useI18n()
 
 const loading = ref(false)
 const errorMsg = ref('')
@@ -44,7 +46,7 @@ const load = async () => {
             await router.replace({ name: 'admin-login' })
             return
         }
-        errorMsg.value = '加载失败'
+        errorMsg.value = t('admin.contacts.errors.load')
     } finally {
         loading.value = false
     }
@@ -61,14 +63,14 @@ const setStatus = async (id: number, status: ContactLead['status']) => {
             await router.replace({ name: 'admin-login' })
             return
         }
-        errorMsg.value = '更新失败'
+        errorMsg.value = t('admin.contacts.errors.update')
     } finally {
         loading.value = false
     }
 }
 
 const remove = async (id: number) => {
-    if (!confirm(`确认删除线索 #${id}？（硬删除）`)) return
+    if (!confirm(t('admin.contacts.confirmDelete', { id }))) return
     loading.value = true
     errorMsg.value = ''
     try {
@@ -79,7 +81,7 @@ const remove = async (id: number) => {
             await router.replace({ name: 'admin-login' })
             return
         }
-        errorMsg.value = '删除失败'
+        errorMsg.value = t('admin.contacts.errors.delete')
     } finally {
         loading.value = false
     }
@@ -92,24 +94,27 @@ onMounted(load)
     <main class="min-h-screen bg-white">
         <div class="px-6 py-10 max-w-6xl mx-auto">
             <div class="flex items-center justify-between">
-                <h1 class="font-display text-2xl uppercase tracking-wider">Contacts</h1>
+                <h1 class="font-display text-2xl uppercase tracking-wider">{{ t('admin.nav.contacts') }}</h1>
                 <router-link :to="{ name: 'admin-home' }" class="font-mono text-xs uppercase tracking-[0.25em]">←
-                    Back</router-link>
+                    {{ t('admin.contacts.back') }}</router-link>
             </div>
 
             <div class="mt-6 flex items-center justify-between gap-4">
                 <div class="flex items-center gap-3">
-                    <span class="font-mono text-xs uppercase tracking-[0.25em] text-black/60">Status</span>
+                    <span class="font-mono text-xs uppercase tracking-[0.25em] text-black/60">{{
+                        t('admin.contacts.filters.status') }}</span>
                     <select v-model="filterStatus" class="h-9 px-2 border border-border font-mono text-xs">
-                        <option value="all">all</option>
-                        <option value="new">new</option>
-                        <option value="contacted">contacted</option>
-                        <option value="closed">closed</option>
+                        <option value="all">{{ t('admin.contacts.filters.all') }}</option>
+                        <option value="new">{{ t('admin.contacts.filters.new') }}</option>
+                        <option value="contacted">{{ t('admin.contacts.filters.contacted') }}</option>
+                        <option value="closed">{{ t('admin.contacts.filters.closed') }}</option>
                     </select>
                     <button @click="load"
-                        class="h-9 px-3 border border-border font-mono text-xs uppercase tracking-[0.25em]">Refresh</button>
+                        class="h-9 px-3 border border-border font-mono text-xs uppercase tracking-[0.25em]">{{
+                            t('admin.actions.refresh') }}</button>
                 </div>
-                <div class="font-mono text-xs text-black/60">{{ items.length }} items</div>
+                <div class="font-mono text-xs text-black/60">{{ t('admin.contacts.items', { count: items.length }) }}
+                </div>
             </div>
 
             <p v-if="errorMsg" class="mt-4 font-mono text-xs text-red-600">{{ errorMsg }}</p>
@@ -118,15 +123,15 @@ onMounted(load)
                 <table class="min-w-full text-left font-mono text-xs">
                     <thead class="bg-border/30">
                         <tr>
-                            <th class="p-3">ID</th>
-                            <th class="p-3">Created</th>
-                            <th class="p-3">Name</th>
-                            <th class="p-3">Phone</th>
-                            <th class="p-3">Wechat</th>
-                            <th class="p-3">Message</th>
-                            <th class="p-3">Source</th>
-                            <th class="p-3">Status</th>
-                            <th class="p-3">Actions</th>
+                            <th class="p-3">{{ t('admin.contacts.table.id') }}</th>
+                            <th class="p-3">{{ t('admin.contacts.table.created') }}</th>
+                            <th class="p-3">{{ t('admin.contacts.table.name') }}</th>
+                            <th class="p-3">{{ t('admin.contacts.table.phone') }}</th>
+                            <th class="p-3">{{ t('admin.contacts.table.wechat') }}</th>
+                            <th class="p-3">{{ t('admin.contacts.table.message') }}</th>
+                            <th class="p-3">{{ t('admin.contacts.table.source') }}</th>
+                            <th class="p-3">{{ t('admin.contacts.table.status') }}</th>
+                            <th class="p-3">{{ t('admin.contacts.table.actions') }}</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -142,15 +147,15 @@ onMounted(load)
                                 <select :disabled="loading" :value="c.status"
                                     @change="setStatus(c.id, ($event.target as HTMLSelectElement).value as any)"
                                     class="h-9 px-2 border border-border font-mono text-xs">
-                                    <option value="new">new</option>
-                                    <option value="contacted">contacted</option>
-                                    <option value="closed">closed</option>
+                                    <option value="new">{{ t('admin.contacts.filters.new') }}</option>
+                                    <option value="contacted">{{ t('admin.contacts.filters.contacted') }}</option>
+                                    <option value="closed">{{ t('admin.contacts.filters.closed') }}</option>
                                 </select>
                             </td>
                             <td class="p-3">
                                 <button :disabled="loading" @click="remove(c.id)"
                                     class="h-8 px-3 border border-red-300 bg-white text-red-700 hover:border-red-500 transition-none disabled:opacity-60">
-                                    Delete
+                                    {{ t('admin.actions.delete') }}
                                 </button>
                             </td>
                         </tr>
