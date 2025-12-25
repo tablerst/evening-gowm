@@ -1,11 +1,11 @@
-# Evening Gown · White Phantom（白色幻影）
+# Evening Gown · FLEURLIS（白色幻影）
 
-> **Theme Code: White Phantom / 白色幻影**
+> **Theme Code: FLEURLIS / 白色幻影**
 > 
-> **Design Core: Linear Luxury / 线性奢华**
+> **Design Core: Industrial Precision / 工业级精度 · The Archive / 档案库**
 
-本项目是一个高端晚礼服店铺的宣传页面，采用 Vue 3 + TypeScript 开发。
-视觉与交互以 **高调摄影（High-Key）**、**Linear 风格微边框**、**毛玻璃** 与 **珠光丝绸材质感** 为核心，强调“白中之白”的克制高级感。
+本项目是一个面向 B2B 批发业务的晚礼服产品站点（含后台），采用 Vue 3 + TypeScript 开发。
+视觉与交互遵循 `DESIGN.md` 与 `STYLE.md`：以 **日系冷调（Cyan Shift）**、**锐利几何（0px 圆角）**、**高密度信息展示** 与 **绝对平面（Flat）** 为核心，强调“稳定、高效、专业”的数字档案库体验。
 
 ## 📖 项目文档
 
@@ -14,37 +14,40 @@
 - **[🎨 UI Design Guide (DESIGN.md)](./DESIGN.md)**
   包含信息架构、Hero 首屏设计规范、排版体系及动效原则。
 - **[💅 Style Guide (STYLE.md)](./STYLE.md)**
-  包含色彩系统 (OKLCH)、Design Tokens 定义及主题配置说明。
+  包含三色原则、字体体系、交互动效（Hard Cut）、滤镜配方与 Design Tokens 定义。
 
 ## 💎 设计理念
 
-> “奢华不靠饱和度取胜，而靠结构、材质与留白。”
+> “B2B 的高级感来自秩序、对比与效率，而不是装饰。”
 
-本项目的设计核心在于 **克制** 与 **建筑感**：
+本项目的设计核心是 **工业级精度** 与 **档案库隐喻**：
 
-- **白中之白**：通过“结构白/材质白”的细微冷暖差异构建空间深度（避免纯白刺眼）。
-- **Linear Luxury**：用 1px 微边框、玻璃拟态与极淡的环境阴影，建立精确但不冰冷的秩序感。
-- **珠光材质**：在 WebGL 丝绸中模拟菲涅尔色移与高光碎裂感，服务于“展厅预展（Vernissage）”的沉浸体验。
+- **档案库（The Archive）**：从“画廊式浏览”转向“检索式浏览”，让批发客户能在单屏读取更多款式与关键信息。
+- **三色原则（Tri-Chromatic）**：全站配色严格控制在 3 个核心色（商品图片除外）。
+- **锐利几何（Sharp Geometry）**：全局 `0px` 圆角；用 `1px` 边框/分割线建立层级（而非阴影与拟物）。
+- **硬切动效（Hard Cut）**：避免缓动与淡入淡出；强调“操作即反馈”，接近交易终端/工业面板的响应。
+- **冷剧滤镜（Japanese Cold Drama）**：Hero 视频与氛围图统一使用青色偏移滤镜，强化冷峻与通透的工业基调。
 
 ## ✨ 核心特性
 
-### 1. 沉浸式视觉 (Immersive Visuals)
-- **Hero 首屏（Vernissage 预展）**：以干净明亮的高调背景与 WebGL 丝绸模拟作为氛围核心，强调珠光高光与缓慢流体动效。
-- **Bento Grid 叙事**：采用非对称便当盒网格，将礼服/材质/叙事拆分成模块化卡片，留白充足、节奏明确。
+### 1. 制造剧场 (Production Theatre)
+- **Hero 首屏**：100vh 循环视频（工厂/针脚/剪裁/面料质感），叠加冷调滤镜；前景文字使用等宽字体，像“字幕/注释”一样传递制造能力与交付信任。
+- **信息外显**：不追求大段品牌故事，优先展示“可验证的信息”（产能、交期、流程、款号）。
 
-### 2. 细腻交互 (Micro-interactions)
-- **动效原则**：慢、溶解、模糊过渡与流动（避免 Q 弹与剧烈位移）。
-- **按钮/卡片反馈**：Hover 更偏“边缘发光 / 内发光”，卡片不上浮，用细节传达质感。
+### 2. 高效交互 (B2B Micro-interactions)
+- **动效原则**：Hard Cut（瞬时切换）；避免弹性/缓动/长过渡，让操作像“开关”一样明确。
+- **卡片交互**：Hover 0 延迟切换到细节图/面料微距；不使用上浮阴影，用边框颜色变化表达状态。
+- **截图友好**：高对比度的排版与边框，适配微信沟通的“截图即报价/确认”的工作流。
 
 ### 3. 主题系统 (Theming)
-- 定义语义化的 Design Tokens（参考 `STYLE.md`），用于背景、文字、边框、玻璃拟态与阴影。
-- 核心色板（摘录）：
-  - **Atelier Mist（工坊迷雾）**：`#F9F9F9`
-  - **Pure Silk（纯丝）**：`#FFFFFF`
-  - **Charcoal Ink（炭墨）**：`#1A1A1A`
-  - **Stone Grey（岩石灰）**：`#595959`
-  - **Platinum Hairline（铂金丝）**：`#E5E5E5`
-  - **Champagne（香槟金，克制使用）**：`#D4AF37`
+- 主题与组件风格以 `STYLE.md` 为准，核心约束：
+  - **Canvas**：`#FFFFFF`（绝对白）
+  - **Structure**：`#000000`（结构黑，用于文字/线条）
+  - **Brand**：`#000226`（Midnight Abyss，唯一品牌色，用于 CTA / Hover / Ticker 背景）
+  - **Border**：默认 `1px` 描边（如 `#E2E8F0`），用于表格线与空间分割
+  - **Geometry**：全局圆角 `0px`；禁止弥散投影/渐变/玻璃拟态
+  - **Typography**：标题偏 Display（Bodoni Moda，全大写）；正文 Inter；数据/参数 JetBrains Mono 或 DIN
+  - **Filters**：Hero/氛围图使用 Cyan Shift 滤镜配方（见 `STYLE.md`）
 
 ## 🛠️ 技术栈
 

@@ -1,7 +1,7 @@
 {
   "nav": {
     "brandLine1": "NOIR & ÉCLAT",
-    "brandLine2": "WHITE PHANTOM",
+    "brandLine2": "FLEURLIS",
     "links": {
       "process": "Process",
       "brief": "Brief",
@@ -86,14 +86,14 @@
     }
   },
   "productDetail": {
-    "routeTitle": "Product · White Phantom",
+    "routeTitle": "Product · FLEURLIS",
     "titlePrefix": "STYLE",
     "back": "Back",
     "loading": "Loading…",
     "error": "Failed to load",
     "priceLabel": "Pricing",
     "priceNote": "Wholesale & custom orders. Price on request; lead time and options confirmed by the atelier.",
-    "metaDescriptionFallback": "White Phantom gown. Wholesale & custom orders. Price on request.",
+    "metaDescriptionFallback": "FLEURLIS gown. Wholesale & custom orders. Price on request.",
     "ctaPrimary": "Contact atelier",
     "copyLink": "Copy link",
     "copySuccess": "Link copied",
@@ -190,7 +190,7 @@
   },
   "couture": {
     "eyebrow": "COUTURE & CUSTOM",
-    "title": "Book a White Phantom fitting",
+    "title": "Book a FLEURLIS fitting",
     "copy": "Each fitting happens in a frosted-glass quiet room with dawn-like ambient light. Stylists deliver a look sheet tuned to skin tone and occasion, synced with fragrance notes and fabric texture archives.",
     "bullets": [
       "Remote styling session · 45 minutes",
@@ -199,7 +199,7 @@
     ],
     "badge": "By Appointment Only",
     "formTitle": "Schedule your fitting",
-    "formCopy": "Tell us your city and preferred date; the atelier will arrange the nearest White Phantom salon.",
+    "formCopy": "Tell us your city and preferred date; the atelier will arrange the nearest FLEURLIS salon.",
     "form": {
       "city": "City",
       "date": "Date",
@@ -241,7 +241,7 @@
     },
     "layout": {
       "brand": "Admin",
-      "productName": "White Phantom",
+      "productName": "FLEURLIS",
       "backoffice": "Backoffice"
     },
     "nav": {
@@ -270,12 +270,12 @@
       "toEn": "EN"
     },
     "titles": {
-      "login": "Admin Login · White Phantom",
-      "home": "Admin · White Phantom",
-      "products": "Admin Products · White Phantom",
-      "updates": "Admin Updates · White Phantom",
-      "contacts": "Admin Contacts · White Phantom",
-      "events": "Admin Events · White Phantom"
+      "login": "Admin Login · FLEURLIS",
+      "home": "Admin · FLEURLIS",
+      "products": "Admin Products · FLEURLIS",
+      "updates": "Admin Updates · FLEURLIS",
+      "contacts": "Admin Contacts · FLEURLIS",
+      "events": "Admin Events · FLEURLIS"
     },
     "logoutConfirm": {
       "title": "Confirm sign out",

@@ -247,7 +247,7 @@ const buildDynamicTitle = () => {
     const styleNo = product.value?.styleNo
     if (!styleNo) return ''
     const prefix = t('productDetail.titlePrefix')
-    const brand = 'White Phantom'
+    const brand = 'FLEURLIS'
     return `${prefix} #${styleNo} · ${brand}`
 }
 
@@ -334,7 +334,7 @@ const buildPoster = async (p: ProductDetail) => {
     ctx.fillRect(0, 0, w, 96)
     ctx.fillStyle = '#ffffff'
     ctx.font = 'bold 38px ui-sans-serif, system-ui, -apple-system'
-    ctx.fillText('WHITE PHANTOM', 48, 62)
+    ctx.fillText('FLEURLIS', 48, 62)
 
     let drewImage = false
     if (p.coverImage) {

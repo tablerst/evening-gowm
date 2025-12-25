@@ -1,7 +1,7 @@
 {
   "nav": {
     "brandLine1": "NOIR & ÉCLAT",
-    "brandLine2": "WHITE PHANTOM",
+    "brandLine2": "FLEURLIS",
     "links": {
       "process": "设计与生产",
       "brief": "公司资讯",
@@ -86,14 +86,14 @@
     }
   },
   "productDetail": {
-    "routeTitle": "商品详情 · White Phantom",
+    "routeTitle": "商品详情 · FLEURLIS",
     "titlePrefix": "款号",
     "back": "返回",
     "loading": "加载中…",
     "error": "加载失败",
     "priceLabel": "价格",
     "priceNote": "默认价格面议；具体交期与可选配置以沟通确认为准。",
-    "metaDescriptionFallback": "White Phantom 礼服。支持批发与定制，价格面议。",
+    "metaDescriptionFallback": "FLEURLIS 礼服。支持批发与定制，价格面议。",
     "ctaPrimary": "预约 / 咨询",
     "copyLink": "复制链接",
     "copySuccess": "链接已复制",
@@ -190,12 +190,12 @@
   },
   "couture": {
     "eyebrow": "COUTURE & CUSTOM",
-    "title": "预约 White Phantom 试穿",
+    "title": "预约 FLEURLIS 试穿",
     "copy": "每次量体都在磨砂玻璃的静谧空间进行，Ambient 光模拟拂晓日光。造型顾问按肤色与场合提供 Look Sheet，并同步香氛与面料触感档案。",
     "bullets": ["远程体感会议 · 45 分钟", "面料触感档案 + 香氛礼包寄送", "72 小时草图 · 14 天首版试衣"],
     "badge": "仅限预约",
     "formTitle": "预约专属试穿",
-    "formCopy": "告诉我们你的城市与理想日期，工坊将为你安排最近的 White Phantom Salon。",
+    "formCopy": "告诉我们你的城市与理想日期，工坊将为你安排最近的 FLEURLIS Salon。",
     "form": {
       "city": "城市",
       "date": "日期",
@@ -237,7 +237,7 @@
     },
     "layout": {
       "brand": "后台",
-      "productName": "White Phantom",
+      "productName": "FLEURLIS",
       "backoffice": "后台"
     },
     "nav": {
@@ -266,12 +266,12 @@
       "toEn": "EN"
     },
     "titles": {
-      "login": "后台登录 · White Phantom",
-      "home": "后台 · White Phantom",
-      "products": "后台产品 · White Phantom",
-      "updates": "后台动态 · White Phantom",
-      "contacts": "后台咨询 · White Phantom",
-      "events": "后台事件 · White Phantom"
+      "login": "后台登录 · FLEURLIS",
+      "home": "后台 · FLEURLIS",
+      "products": "后台产品 · FLEURLIS",
+      "updates": "后台动态 · FLEURLIS",
+      "contacts": "后台咨询 · FLEURLIS",
+      "events": "后台事件 · FLEURLIS"
     },
     "logoutConfirm": {
       "title": "确认退出",

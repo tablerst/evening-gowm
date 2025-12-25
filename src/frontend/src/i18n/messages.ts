@@ -4,7 +4,7 @@ export const messages = {
     en: {
         nav: {
             brandLine1: 'NOIR & ÉCLAT',
-            brandLine2: 'WHITE PHANTOM',
+            brandLine2: 'FLEURLIS',
             links: {
                 process: 'Process',
                 brief: 'Brief',
@@ -118,7 +118,7 @@ SOURCE FACTORY · GLOBAL SUPPLY`,
         },
         couture: {
             eyebrow: 'COUTURE & CUSTOM',
-            title: 'Book a White Phantom fitting',
+            title: 'Book a FLEURLIS fitting',
             copy:
                 'Each fitting happens in a frosted-glass quiet room with dawn-like ambient light. Stylists deliver a look sheet tuned to skin tone and occasion, synced with fragrance notes and fabric texture archives.',
             bullets: [
@@ -128,7 +128,7 @@ SOURCE FACTORY · GLOBAL SUPPLY`,
             ],
             badge: 'By Appointment Only',
             formTitle: 'Schedule your fitting',
-            formCopy: 'Tell us your city and preferred date; the atelier will arrange the nearest White Phantom salon.',
+            formCopy: 'Tell us your city and preferred date; the atelier will arrange the nearest FLEURLIS salon.',
             form: {
                 city: 'City',
                 date: 'Date',
@@ -167,7 +167,7 @@ SOURCE FACTORY · GLOBAL SUPPLY`,
     zh: {
         nav: {
             brandLine1: 'NOIR & ÉCLAT',
-            brandLine2: 'WHITE PHANTOM',
+            brandLine2: 'FLEURLIS',
             links: {
                 process: '设计与生产',
                 brief: '公司资讯',
@@ -278,12 +278,12 @@ SOURCE FACTORY · GLOBAL SUPPLY`,
         },
         couture: {
             eyebrow: 'COUTURE & CUSTOM',
-            title: '预约 White Phantom 试穿',
+            title: '预约 FLEURLIS 试穿',
             copy: '每次量体都在磨砂玻璃的静谧空间进行，Ambient 光模拟拂晓日光。造型顾问按肤色与场合提供 Look Sheet，并同步香氛与面料触感档案。',
             bullets: ['远程体感会议 · 45 分钟', '面料触感档案 + 香氛礼包寄送', '72 小时草图 · 14 天首版试衣'],
             badge: '仅限预约',
             formTitle: '预约专属试穿',
-            formCopy: '告诉我们你的城市与理想日期，工坊将为你安排最近的 White Phantom Salon。',
+            formCopy: '告诉我们你的城市与理想日期，工坊将为你安排最近的 FLEURLIS Salon。',
             form: {
                 city: '城市',
                 date: '日期',

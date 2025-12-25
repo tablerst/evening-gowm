@@ -13,7 +13,7 @@ const routes: RouteRecordRaw[] = [
         component: () => import('../views/HomeView.vue'),
         meta: {
             layout: 'default',
-            title: 'White Phantom',
+            title: 'FLEURLIS',
         },
     },
     {
@@ -22,7 +22,7 @@ const routes: RouteRecordRaw[] = [
         component: () => import('../views/PreviewView.vue'),
         meta: {
             layout: 'blank',
-            title: 'Preview · White Phantom',
+            title: 'Preview · FLEURLIS',
         },
     },
     {
@@ -40,7 +40,7 @@ const routes: RouteRecordRaw[] = [
         component: () => import('../views/UpdatesView.vue'),
         meta: {
             layout: 'default',
-            title: 'Updates · White Phantom',
+            title: 'Updates · FLEURLIS',
         },
     },
     {
@@ -49,7 +49,7 @@ const routes: RouteRecordRaw[] = [
         component: () => import('../views/UpdateDetailView.vue'),
         meta: {
             layout: 'default',
-            title: 'Update · White Phantom',
+            title: 'Update · FLEURLIS',
         },
     },
 
