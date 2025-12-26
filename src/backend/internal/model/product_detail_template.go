@@ -11,20 +11,72 @@ var errDetailNotObject = errors.New("detail must be a JSON object")
 const SettingKeyProductDetailTemplate = "product_detail_template"
 
 // DefaultProductDetailTemplate returns the default template used to populate Product.DetailJSON.
-// It includes the requested default fields: 颜色、尺码、件数、交付时间.
+// It includes the requested default fields and a v2 layout skeleton:
+// - sections/blocks (drag & drop in admin)
+// - zh/en i18n for titles
+// - 颜色、尺码、件数、交付时间
 func DefaultProductDetailTemplate() json.RawMessage {
-	// Keep keys compatible with existing frontend rendering:
-	// - specs: [{k|label, v|value}]
-	// - option_groups: [{name, options: []}]
 	// NOTE: values are intentionally empty so merchandisers can fill them per product.
 	v := map[string]any{
+		"schema_version": 2,
+		"gallery":        []any{},
 		"specs": []any{
-			map[string]any{"k": "件数", "v": ""},
-			map[string]any{"k": "交付时间", "v": ""},
+			map[string]any{
+				"key":        "pieces",
+				"label_i18n": map[string]any{"zh": "件数", "en": "Pieces"},
+				"value_i18n": map[string]any{"zh": "", "en": ""},
+			},
+			map[string]any{
+				"key":        "lead_time",
+				"label_i18n": map[string]any{"zh": "交付时间", "en": "Lead Time"},
+				"value_i18n": map[string]any{"zh": "", "en": ""},
+			},
 		},
 		"option_groups": []any{
-			map[string]any{"name": "颜色", "options": []any{}},
-			map[string]any{"name": "尺码", "options": []any{}},
+			map[string]any{
+				"key":       "color",
+				"name_i18n": map[string]any{"zh": "颜色", "en": "Color"},
+				"options":   []any{},
+			},
+			map[string]any{
+				"key":       "size",
+				"name_i18n": map[string]any{"zh": "尺码", "en": "Size"},
+				"options":   []any{},
+			},
+		},
+		"sections": []any{
+			map[string]any{
+				"id":         "gallery",
+				"type":       "gallery",
+				"area":       "media",
+				"title_i18n": map[string]any{"zh": "画廊", "en": "Gallery"},
+				"props":      map[string]any{"includeCoverHover": true},
+			},
+			map[string]any{
+				"id":         "options",
+				"type":       "options",
+				"area":       "sticky",
+				"title_i18n": map[string]any{"zh": "可选项", "en": "Options"},
+			},
+			map[string]any{
+				"id":         "overview",
+				"type":       "richText",
+				"area":       "main",
+				"title_i18n": map[string]any{"zh": "概览", "en": "Overview"},
+				"data":       map[string]any{"text_i18n": map[string]any{"zh": "", "en": ""}},
+			},
+			map[string]any{
+				"id":         "specs",
+				"type":       "specs",
+				"area":       "main",
+				"title_i18n": map[string]any{"zh": "规格", "en": "Specs"},
+			},
+			map[string]any{
+				"id":         "service",
+				"type":       "service",
+				"area":       "aside",
+				"title_i18n": map[string]any{"zh": "服务", "en": "Service"},
+			},
 		},
 	}
 	b, _ := json.Marshal(v)
@@ -129,7 +181,7 @@ func normalizeOptionGroups(raw any) []map[string]any {
 		if !ok {
 			continue
 		}
-		name := pickString(m, "name", "title", "label")
+		name := pickString(m, "key", "name", "title", "label")
 		if name == "" {
 			continue
 		}
@@ -188,7 +240,7 @@ func mergeByName(template, user []map[string]any) []any {
 	result := make([]any, 0, len(template)+len(user))
 
 	for _, it := range user {
-		name := pickString(it, "name", "title", "label")
+		name := pickString(it, "key", "name", "title", "label")
 		if name == "" {
 			continue
 		}
@@ -196,7 +248,7 @@ func mergeByName(template, user []map[string]any) []any {
 		result = append(result, it)
 	}
 	for _, it := range template {
-		name := pickString(it, "name", "title", "label")
+		name := pickString(it, "key", "name", "title", "label")
 		if name == "" {
 			continue
 		}

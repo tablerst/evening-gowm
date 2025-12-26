@@ -389,6 +389,74 @@
         "hoverImage": "悬停图",
         "detailJson": "Detail JSON（options/specs）"
       },
+      "detailEditor": {
+        "title": "商品详情（可视化编辑）",
+        "hint": "支持拖拽 blocks 排序；每个 block 可设置所在区域（媒体/右侧/主体/侧栏）。也可切换到高级 JSON 模式。",
+        "sectionsTitle": "Sections / Blocks",
+        "addBlock": "添加 Block",
+        "tabs": {
+          "visual": "可视化",
+          "json": "高级 JSON"
+        },
+        "jsonWarning": "高级模式会直接编辑原始 JSON（可输入任意字段）。若 JSON 非法，可视化模式将无法解析。",
+        "normalize": "规范化并回到可视化",
+        "area": {
+          "media": "媒体区",
+          "sticky": "右侧（Sticky）",
+          "main": "主体",
+          "aside": "侧栏"
+        },
+        "blocks": {
+          "gallery": "画廊",
+          "options": "可选项",
+          "richText": "文本",
+          "specs": "规格",
+          "service": "服务",
+          "divider": "分隔线"
+        },
+        "placeholders": {
+          "titleZh": "标题（中文，可选）",
+          "titleEn": "Title (EN, optional)",
+          "textZh": "正文（中文）",
+          "textEn": "Body (EN)"
+        },
+        "errors": {
+          "parse": "Detail JSON 无法解析为对象（请检查格式）",
+          "uploadHttp": "上传失败（HTTP {status}）",
+          "upload": "上传失败"
+        },
+        "gallery": {
+          "title": "画廊图片",
+          "add": "添加图片",
+          "item": "图片",
+          "urlPlaceholder": "图片 URL（支持 /api/v1/assets/... 或外链）",
+          "needStyleNo": "需先填写有效 StyleNo 才能上传"
+        },
+        "specs": {
+          "title": "规格（支持中英文）",
+          "add": "添加一行",
+          "row": "规格",
+          "keyPlaceholder": "key（稳定标识，如 lead_time）",
+          "labelZh": "名称（中文）",
+          "labelEn": "Name (EN)",
+          "valueZh": "值（中文）",
+          "valueEn": "Value (EN)"
+        },
+        "options": {
+          "title": "可选项（支持中英文）",
+          "addGroup": "添加分组",
+          "group": "分组",
+          "groupKeyPlaceholder": "group key（如 color / size）",
+          "groupNameZh": "分组名（中文）",
+          "groupNameEn": "Group (EN)",
+          "items": "选项列表",
+          "addItem": "添加选项",
+          "item": "选项",
+          "itemKeyPlaceholder": "option key（稳定标识，如 ivory）",
+          "itemLabelZh": "显示（中文）",
+          "itemLabelEn": "Label (EN)"
+        }
+      },
       "upload": {
         "url": "URL",
         "uploading": "上传中…",

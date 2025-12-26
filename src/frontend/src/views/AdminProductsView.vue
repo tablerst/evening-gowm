@@ -8,8 +8,9 @@ import { NButton, NCard, NForm, NFormItem, NInput, NInputNumber, NModal, NSpace,
 import { HttpError, resolveApiUrl } from '@/api/http'
 import { adminDelete, adminGet, adminGetBlob, adminPatch, adminPost } from '@/admin/api'
 import { appEnv } from '@/config/env'
-import { compressImageToWebpUnderLimit, uploadAdminImage, type UploadKind } from '@/composables/useAdminImageUpload'
+import { compressImageToWebpUnderLimit, uploadAdminImage } from '@/composables/useAdminImageUpload'
 import { compareStyleNo, isValidStyleNo, normalizeStyleNo } from '@/utils/styleNo'
+import ProductDetailEditor from '@/admin/components/ProductDetailEditor.vue'
 
 type Product = {
     id: number
@@ -50,6 +51,8 @@ const sortBy = ref<'default' | 'style_asc' | 'style_desc'>('default')
 const showCreateModal = ref(false)
 const showEditModal = ref(false)
 
+const DEFAULT_DETAIL_JSON = '{"specs":[{"k":"件数","v":""},{"k":"交付时间","v":""}],"option_groups":[{"name":"颜色","options":[]},{"name":"尺码","options":[]}]}'
+
 const editingId = ref<number | null>(null)
 const editForm = ref({
     slug: '',
@@ -63,7 +66,7 @@ const editForm = ref({
     coverImageKey: '',
     hoverImage: '',
     hoverImageKey: '',
-    detailJson: '{"specs":[{"k":"件数","v":""},{"k":"交付时间","v":""}],"option_groups":[{"name":"颜色","options":[]},{"name":"尺码","options":[]}]}',
+    detailJson: DEFAULT_DETAIL_JSON,
 })
 
 const form = ref({
@@ -77,8 +80,34 @@ const form = ref({
     coverImageKey: '',
     hoverImage: '',
     hoverImageKey: '',
-    detailJson: '{"specs":[{"k":"件数","v":""},{"k":"交付时间","v":""}],"option_groups":[{"name":"颜色","options":[]},{"name":"尺码","options":[]}]}',
+    detailJson: DEFAULT_DETAIL_JSON,
 })
+
+type ProductDetailTemplateResponse = { key: string; value: unknown }
+
+const loadDetailTemplateIntoCreateForm = async () => {
+    // Only auto-fill when user hasn't started editing.
+    const cur = String(form.value.detailJson ?? '').trim()
+    if (cur && cur !== DEFAULT_DETAIL_JSON) return
+    try {
+        const res = await adminGet<ProductDetailTemplateResponse>('/api/v1/admin/settings/product-detail-template')
+        if (res && typeof res === 'object' && 'value' in res) {
+            form.value.detailJson = JSON.stringify((res as any).value ?? {}, null, 2)
+        }
+    } catch (e) {
+        // Non-fatal: keep fallback default.
+        if (e instanceof HttpError && (e.status === 401 || e.status === 403)) {
+            await router.replace({ name: 'admin-login' })
+        }
+    }
+}
+
+watch(
+    () => showCreateModal.value,
+    (open) => {
+        if (open) loadDetailTemplateIntoCreateForm()
+    },
+)
 
 type UploadSlotState = {
     uploading: boolean
@@ -86,12 +115,14 @@ type UploadSlotState = {
     previewUrl: string
 }
 
-const createUpload = ref<Record<UploadKind, UploadSlotState>>({
+type CoverHoverKind = 'cover' | 'hover'
+
+const createUpload = ref<Record<CoverHoverKind, UploadSlotState>>({
     cover: { uploading: false, error: '', previewUrl: '' },
     hover: { uploading: false, error: '', previewUrl: '' },
 })
 
-const editUpload = ref<Record<UploadKind, UploadSlotState>>({
+const editUpload = ref<Record<CoverHoverKind, UploadSlotState>>({
     cover: { uploading: false, error: '', previewUrl: '' },
     hover: { uploading: false, error: '', previewUrl: '' },
 })
@@ -103,7 +134,7 @@ const revokePreview = (slot: UploadSlotState) => {
 
 const maxUploadHint = computed(() => `${Math.max(1, Math.round((appEnv.maxImageUploadBytes ?? 1048576) / 1024 / 1024))}MB`)
 
-const onPickImage = async (scope: 'create' | 'edit', kind: UploadKind, e: Event) => {
+const onPickImage = async (scope: 'create' | 'edit', kind: CoverHoverKind, e: Event) => {
     const input = e.target as HTMLInputElement
     const file = input.files?.[0]
     // reset input so picking the same file again still triggers change
@@ -350,7 +381,7 @@ const create = async () => {
     }
 }
 
-const loadDraftAssetPreview = async (kind: UploadKind, objectKey: string) => {
+const loadDraftAssetPreview = async (kind: CoverHoverKind, objectKey: string) => {
     const key = String(objectKey ?? '').replace(/^\/+/, '')
     if (!key) return
 
@@ -395,7 +426,7 @@ const startEdit = async (id: number) => {
             coverImageKey: p.coverImageKey ?? '',
             hoverImage: p.hoverImage ?? '',
             hoverImageKey: p.hoverImageKey ?? '',
-            detailJson: JSON.stringify(p.detail ?? { specs: [], option_groups: [] }),
+            detailJson: JSON.stringify(p.detail ?? { specs: [], option_groups: [] }, null, 2),
         }
 
         showEditModal.value = true
@@ -747,8 +778,8 @@ onMounted(load)
                 </div>
 
                 <NFormItem :label="t('admin.products.fields.detailJson')" class="mt-3">
-                    <NInput v-model:value="form.detailJson" type="textarea" :autosize="{ minRows: 6, maxRows: 14 }"
-                        class="font-mono text-xs" />
+                    <ProductDetailEditor v-model:json="form.detailJson" :style-no="form.styleNo"
+                        :disabled="loading" />
                 </NFormItem>
 
                 <NSpace justify="end" :size="12">
@@ -848,8 +879,8 @@ onMounted(load)
                 </div>
 
                 <NFormItem :label="t('admin.products.fields.detailJson')" class="mt-3">
-                    <NInput v-model:value="editForm.detailJson" type="textarea" :autosize="{ minRows: 6, maxRows: 14 }"
-                        class="font-mono text-xs" />
+                    <ProductDetailEditor v-model:json="editForm.detailJson" :style-no="editForm.styleNo"
+                        :disabled="loading" />
                 </NFormItem>
 
                 <NSpace justify="end" :size="12">

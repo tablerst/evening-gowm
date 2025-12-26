@@ -162,11 +162,12 @@ func (h *AssetsHandler) isPublishedProductAsset(c *gin.Context, objectKey string
 	}
 
 	var cnt int64
+	like := "%" + objectKey + "%"
 	err = h.db.WithContext(c.Request.Context()).Model(&model.Product{}).
 		Where("style_no = ?", styleNo).
 		Where("published_at IS NOT NULL").
 		Where("deleted_at IS NULL").
-		Where("(cover_image_key = ? OR hover_image_key = ?)", objectKey, objectKey).
+		Where("(cover_image_key = ? OR hover_image_key = ? OR CAST(detail_json AS TEXT) LIKE ?)", objectKey, objectKey, like).
 		Limit(1).
 		Count(&cnt).Error
 	if err != nil {

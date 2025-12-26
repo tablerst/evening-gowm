@@ -35,7 +35,7 @@ func NewUploadsHandler(minioClient *minio.Client, minioCfg config.MinioConfig, u
 //
 // Form fields:
 // - file: image/webp
-// - kind: cover|hover
+// - kind: cover|hover|gallery
 // - styleNo: int
 func (h *UploadsHandler) UploadImage(c *gin.Context) {
 	if h == nil {
@@ -56,7 +56,7 @@ func (h *UploadsHandler) UploadImage(c *gin.Context) {
 	c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, maxBody)
 
 	kind := strings.TrimSpace(c.PostForm("kind"))
-	if kind != "cover" && kind != "hover" {
+	if kind != "cover" && kind != "hover" && kind != "gallery" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid kind"})
 		return
 	}

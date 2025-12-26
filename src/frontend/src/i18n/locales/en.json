@@ -393,6 +393,74 @@
         "hoverImage": "Hover Image",
         "detailJson": "Detail JSON (options/specs)"
       },
+      "detailEditor": {
+        "title": "Product Detail (Visual Builder)",
+        "hint": "Drag & drop blocks to reorder. Each block can be assigned to an area (media / sticky / main / aside). You can also switch to raw JSON mode.",
+        "sectionsTitle": "Sections / Blocks",
+        "addBlock": "Add Block",
+        "tabs": {
+          "visual": "Visual",
+          "json": "Raw JSON"
+        },
+        "jsonWarning": "Raw mode edits JSON directly (any custom fields allowed). Invalid JSON will break visual parsing.",
+        "normalize": "Normalize & back to visual",
+        "area": {
+          "media": "Media",
+          "sticky": "Sticky",
+          "main": "Main",
+          "aside": "Aside"
+        },
+        "blocks": {
+          "gallery": "Gallery",
+          "options": "Options",
+          "richText": "Text",
+          "specs": "Specs",
+          "service": "Service",
+          "divider": "Divider"
+        },
+        "placeholders": {
+          "titleZh": "Title (ZH, optional)",
+          "titleEn": "Title (EN, optional)",
+          "textZh": "Body (ZH)",
+          "textEn": "Body (EN)"
+        },
+        "errors": {
+          "parse": "Detail JSON must be a JSON object",
+          "uploadHttp": "Upload failed (HTTP {status})",
+          "upload": "Upload failed"
+        },
+        "gallery": {
+          "title": "Gallery Images",
+          "add": "Add image",
+          "item": "Image",
+          "urlPlaceholder": "Image URL (supports /api/v1/assets/... or external)",
+          "needStyleNo": "Valid StyleNo is required before uploading"
+        },
+        "specs": {
+          "title": "Specs (ZH/EN)",
+          "add": "Add row",
+          "row": "Spec",
+          "keyPlaceholder": "key (stable id, e.g. lead_time)",
+          "labelZh": "Label (ZH)",
+          "labelEn": "Label (EN)",
+          "valueZh": "Value (ZH)",
+          "valueEn": "Value (EN)"
+        },
+        "options": {
+          "title": "Options (ZH/EN)",
+          "addGroup": "Add group",
+          "group": "Group",
+          "groupKeyPlaceholder": "group key (e.g. color / size)",
+          "groupNameZh": "Name (ZH)",
+          "groupNameEn": "Name (EN)",
+          "items": "Options",
+          "addItem": "Add option",
+          "item": "Option",
+          "itemKeyPlaceholder": "option key (stable id, e.g. ivory)",
+          "itemLabelZh": "Label (ZH)",
+          "itemLabelEn": "Label (EN)"
+        }
+      },
       "upload": {
         "url": "URL",
         "uploading": "Uploading…",

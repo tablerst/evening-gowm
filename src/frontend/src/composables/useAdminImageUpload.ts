@@ -1,7 +1,7 @@
 import { adminPostForm } from '@/admin/api'
 import { appEnv } from '@/config/env'
 
-export type UploadKind = 'cover' | 'hover'
+export type UploadKind = 'cover' | 'hover' | 'gallery'
 
 export type UploadResult = {
     url: string

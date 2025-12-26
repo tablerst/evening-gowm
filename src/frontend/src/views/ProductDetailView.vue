@@ -22,7 +22,16 @@ type ProductDetail = {
 }
 
 type SpecItem = { label: string; value: string }
-type OptionGroup = { name: string; options: string[] }
+type OptionItem = { key: string; label: string }
+type OptionGroup = { key: string; name: string; options: OptionItem[] }
+
+type DetailSection = {
+    id?: string
+    type?: string
+    area?: string
+    title_i18n?: unknown
+    data?: unknown
+}
 
 const { t, te, locale } = useI18n()
 const route = useRoute()
@@ -35,7 +44,7 @@ const errorMsg = ref('')
 const product = ref<ProductDetail | null>(null)
 
 // Interactive option selections (single-select per option group).
-// Keyed by option group name (e.g. "颜色", "尺码").
+// Keyed by option group key (stable) or fallback to the displayed name.
 const selectedOptions = ref<Record<string, string>>({})
 
 const posterOpen = ref(false)
@@ -125,8 +134,12 @@ const descriptionText = computed(() => {
 const normalizeSpecItem = (raw: unknown): SpecItem | null => {
     const obj = asRecord(raw)
     if (!obj) return null
-    const label = String(obj.label ?? obj.k ?? obj.key ?? obj.name ?? '').trim()
-    const value = String(obj.value ?? obj.v ?? obj.val ?? '').trim()
+    const label =
+        pickLocalizedText(obj.label_i18n) ||
+        String(obj.label ?? obj.k ?? obj.key ?? obj.name ?? '').trim()
+    const value =
+        pickLocalizedText(obj.value_i18n) ||
+        String(obj.value ?? obj.v ?? obj.val ?? '').trim()
     if (!label || !value) return null
     return { label, value }
 }
@@ -140,24 +153,32 @@ const specs = computed<SpecItem[]>(() => {
 const normalizeOptionGroup = (raw: unknown): OptionGroup | null => {
     const obj = asRecord(raw)
     if (!obj) return null
-    const name = String(obj.name ?? obj.title ?? obj.label ?? '').trim()
+
+    const key = String(obj.key ?? obj.id ?? obj.name ?? obj.title ?? obj.label ?? '').trim()
+    const name = pickLocalizedText(obj.name_i18n) || String(obj.name ?? obj.title ?? obj.label ?? '').trim()
+
     const optionsRaw = obj.options
-    const options: string[] = []
+    const options: OptionItem[] = []
     if (Array.isArray(optionsRaw)) {
         for (const opt of optionsRaw) {
             if (typeof opt === 'string') {
                 const s = opt.trim()
-                if (s) options.push(s)
+                if (s) options.push({ key: s, label: s })
                 continue
             }
             const optObj = asRecord(opt)
             if (!optObj) continue
-            const s = String(optObj.label ?? optObj.name ?? optObj.value ?? '').trim()
-            if (s) options.push(s)
+
+            const optKey = String(optObj.key ?? optObj.id ?? optObj.value ?? optObj.name ?? optObj.label ?? '').trim()
+            const optLabel =
+                pickLocalizedText(optObj.label_i18n) ||
+                String(optObj.label ?? optObj.name ?? optObj.value ?? '').trim()
+
+            if (optKey && optLabel) options.push({ key: optKey, label: optLabel })
         }
     }
     if (!name || options.length === 0) return null
-    return { name, options }
+    return { key: key || name, name, options }
 }
 
 const optionGroups = computed<OptionGroup[]>(() => {
@@ -166,12 +187,12 @@ const optionGroups = computed<OptionGroup[]>(() => {
     return raw.map(normalizeOptionGroup).filter(Boolean) as OptionGroup[]
 })
 
-const isOptionSelected = (groupName: string, opt: string) => (selectedOptions.value[groupName] ?? '') === opt
+const isOptionSelected = (groupKey: string, optKey: string) => (selectedOptions.value[groupKey] ?? '') === optKey
 
-const toggleOption = (groupName: string, opt: string) => {
-    const cur = selectedOptions.value[groupName] ?? ''
+const toggleOption = (groupKey: string, optKey: string) => {
+    const cur = selectedOptions.value[groupKey] ?? ''
     // Click again to clear.
-    selectedOptions.value[groupName] = cur === opt ? '' : opt
+    selectedOptions.value[groupKey] = cur === optKey ? '' : optKey
 }
 
 watch(
@@ -181,6 +202,44 @@ watch(
         selectedOptions.value = {}
     },
 )
+
+const effectiveSections = computed<DetailSection[]>(() => {
+    const raw = (detailObj.value as any).sections
+    if (Array.isArray(raw) && raw.length) return raw as DetailSection[]
+
+    // Legacy fallback: keep the old layout order.
+    return [
+        { id: 'gallery', type: 'gallery', area: 'media' },
+        { id: 'options', type: 'options', area: 'sticky' },
+        { id: 'overview', type: 'richText', area: 'main' },
+        { id: 'specs', type: 'specs', area: 'main' },
+        { id: 'service', type: 'service', area: 'aside' },
+    ]
+})
+
+const sectionsByArea = computed(() => {
+    const by = {
+        media: [] as DetailSection[],
+        sticky: [] as DetailSection[],
+        main: [] as DetailSection[],
+        aside: [] as DetailSection[],
+    }
+
+    for (const s of effectiveSections.value) {
+        const area = String(s?.area ?? '').trim()
+        if (area === 'media' || area === 'sticky' || area === 'main' || area === 'aside') {
+            by[area].push(s)
+        } else {
+            by.main.push(s)
+        }
+    }
+    return by
+})
+
+const sectionTitle = (s: DetailSection, fallbackKey: string) => {
+    const title = pickLocalizedText((s as any)?.title_i18n)
+    return title || t(fallbackKey)
+}
 
 const galleryUrls = computed(() => {
     const urls: string[] = []
@@ -471,8 +530,10 @@ const openPoster = async () => {
     try {
         const selectedOptionLines = optionGroups.value
             .map((g) => {
-                const picked = selectedOptions.value[g.name] ?? ''
-                return picked ? `${g.name}: ${picked}` : ''
+                const pickedKey = selectedOptions.value[g.key] ?? ''
+                if (!pickedKey) return ''
+                const picked = g.options.find((o) => o.key === pickedKey)
+                return picked ? `${g.name}: ${picked.label}` : ''
             })
             .filter(Boolean)
 
@@ -582,25 +643,38 @@ onMounted(load)
                             <p v-if="posterError" class="mt-3 font-mono text-xs text-red-600">{{ posterError }}</p>
                         </div>
 
-                        <div v-if="optionGroups.length" class="mt-10">
-                            <h2 class="font-mono text-xs uppercase tracking-[0.25em] text-black/60">{{
-                                t('productDetail.sections.options') }}</h2>
-                            <div class="mt-4 space-y-4">
-                                <div v-for="g in optionGroups" :key="g.name">
-                                    <div class="font-mono text-xs uppercase tracking-[0.22em] text-black/50">
-                                        {{ g.name }}</div>
-                                    <div class="mt-2 flex flex-wrap gap-2">
-                                        <button v-for="opt in g.options" :key="opt" type="button"
-                                            @click="toggleOption(g.name, opt)"
-                                            :aria-pressed="isOptionSelected(g.name, opt)"
-                                            class="px-2.5 py-1 border text-xs transition-colors" :class="isOptionSelected(g.name, opt)
-                                                ? 'bg-brand text-white border-brand'
-                                                : 'bg-white border-border hover:border-black'">
-                                            {{ opt }}
-                                        </button>
+                        <div v-for="(sec, idx) in sectionsByArea.sticky" :key="sec.id || `${sec.type}-${idx}`"
+                            class="mt-10">
+                            <div v-if="sec.type === 'options' && optionGroups.length">
+                                <h2 class="font-mono text-xs uppercase tracking-[0.25em] text-black/60">{{
+                                    sectionTitle(sec, 'productDetail.sections.options') }}</h2>
+                                <div class="mt-4 space-y-4">
+                                    <div v-for="g in optionGroups" :key="g.key">
+                                        <div class="font-mono text-xs uppercase tracking-[0.22em] text-black/50">
+                                            {{ g.name }}</div>
+                                        <div class="mt-2 flex flex-wrap gap-2">
+                                            <button v-for="opt in g.options" :key="opt.key" type="button"
+                                                @click="toggleOption(g.key, opt.key)"
+                                                :aria-pressed="isOptionSelected(g.key, opt.key)"
+                                                class="px-2.5 py-1 border text-xs transition-colors" :class="isOptionSelected(g.key, opt.key)
+                                                    ? 'bg-brand text-white border-brand'
+                                                    : 'bg-white border-border hover:border-black'">
+                                                {{ opt.label }}
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
+
+                            <div v-else-if="sec.type === 'richText'">
+                                <h2 class="font-mono text-xs uppercase tracking-[0.25em] text-black/60">{{
+                                    sectionTitle(sec, 'productDetail.sections.overview') }}</h2>
+                                <p class="mt-4 text-sm leading-relaxed text-black/80 whitespace-pre-line">
+                                    {{ pickLocalizedText((sec as any)?.data?.text_i18n) || descriptionText }}
+                                </p>
+                            </div>
+
+                            <div v-else-if="sec.type === 'divider'" class="border-t border-border" />
                         </div>
                     </aside>
                 </div>
@@ -608,38 +682,46 @@ onMounted(load)
                 <!-- Lower modules -->
                 <div class="mt-14 grid lg:grid-cols-12 gap-10">
                     <section class="lg:col-span-7 space-y-10">
-                        <div v-if="descriptionText" class="border-t border-border pt-8">
-                            <h2 class="font-mono text-xs uppercase tracking-[0.25em] text-black/60">{{
-                                t('productDetail.sections.overview') }}</h2>
-                            <p class="mt-4 text-sm leading-relaxed text-black/80 whitespace-pre-line">
-                                {{ descriptionText }}
-                            </p>
-                        </div>
+                        <div v-for="(sec, idx) in sectionsByArea.main" :key="sec.id || `${sec.type}-${idx}`">
+                            <div v-if="sec.type === 'richText'" class="border-t border-border pt-8">
+                                <h2 class="font-mono text-xs uppercase tracking-[0.25em] text-black/60">{{
+                                    sectionTitle(sec, 'productDetail.sections.overview') }}</h2>
+                                <p class="mt-4 text-sm leading-relaxed text-black/80 whitespace-pre-line">
+                                    {{ pickLocalizedText((sec as any)?.data?.text_i18n) || descriptionText }}
+                                </p>
+                            </div>
 
-                        <div v-if="specs.length" class="border-t border-border pt-8">
-                            <h2 class="font-mono text-xs uppercase tracking-[0.25em] text-black/60">{{
-                                t('productDetail.sections.specs') }}</h2>
-                            <div class="mt-4 border border-border bg-white">
-                                <div v-for="row in specs" :key="row.label"
-                                    class="grid grid-cols-12 gap-4 px-4 py-3 border-b border-border last:border-b-0">
-                                    <div class="col-span-5 font-mono text-xs uppercase tracking-[0.18em] text-black/60">
-                                        {{ row.label }}</div>
-                                    <div class="col-span-7 text-sm text-black/80">{{ row.value }}</div>
+                            <div v-else-if="sec.type === 'specs' && specs.length" class="border-t border-border pt-8">
+                                <h2 class="font-mono text-xs uppercase tracking-[0.25em] text-black/60">{{
+                                    sectionTitle(sec, 'productDetail.sections.specs') }}</h2>
+                                <div class="mt-4 border border-border bg-white">
+                                    <div v-for="row in specs" :key="row.label"
+                                        class="grid grid-cols-12 gap-4 px-4 py-3 border-b border-border last:border-b-0">
+                                        <div class="col-span-5 font-mono text-xs uppercase tracking-[0.18em] text-black/60">
+                                            {{ row.label }}</div>
+                                        <div class="col-span-7 text-sm text-black/80">{{ row.value }}</div>
+                                    </div>
                                 </div>
                             </div>
+
+                            <div v-else-if="sec.type === 'divider'" class="border-t border-border" />
                         </div>
                     </section>
 
                     <aside class="lg:col-span-5">
-                        <div class="border-t border-border pt-8">
-                            <h2 class="font-mono text-xs uppercase tracking-[0.25em] text-black/60">{{
-                                t('productDetail.sections.service') }}</h2>
-                            <ul class="mt-4 space-y-2 text-sm text-black/80">
-                                <li v-for="(it, idx) in serviceItems" :key="idx" class="flex gap-3">
-                                    <span class="text-black/40">—</span>
-                                    <span>{{ it }}</span>
-                                </li>
-                            </ul>
+                        <div v-for="(sec, idx) in sectionsByArea.aside" :key="sec.id || `${sec.type}-${idx}`">
+                            <div v-if="sec.type === 'service'" class="border-t border-border pt-8">
+                                <h2 class="font-mono text-xs uppercase tracking-[0.25em] text-black/60">{{
+                                    sectionTitle(sec, 'productDetail.sections.service') }}</h2>
+                                <ul class="mt-4 space-y-2 text-sm text-black/80">
+                                    <li v-for="(it, j) in serviceItems" :key="j" class="flex gap-3">
+                                        <span class="text-black/40">—</span>
+                                        <span>{{ it }}</span>
+                                    </li>
+                                </ul>
+                            </div>
+
+                            <div v-else-if="sec.type === 'divider'" class="border-t border-border" />
                         </div>
                     </aside>
                 </div>
