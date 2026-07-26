@@ -3,6 +3,7 @@ misc/
 
 # Deployment (do not commit real server configs)
 /deploy/nginx/nginx.conf
+/deploy/nginx/nginx.http-only.conf
 
 # Environment files (DO NOT COMMIT SECRETS)
 .env
