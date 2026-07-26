@@ -1110,6 +1110,26 @@
     font-size: 0.6rem;
     color: var(--text-tertiary);
   }
+
+  .site-footer__filing {
+    display: flex;
+    justify-content: center;
+  }
+
+  .site-footer__filing-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    letter-spacing: 0.12em;
+    white-space: nowrap;
+  }
+
+  .site-footer__filing-link img {
+    width: 20px;
+    height: 20px;
+    flex: 0 0 20px;
+    object-fit: contain;
+  }
 }
 
 @layer utilities {

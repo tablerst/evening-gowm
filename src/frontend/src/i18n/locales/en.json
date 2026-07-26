@@ -23,7 +23,9 @@
     "wechat": "WeChat",
     "email": "Email",
     "legal": "© 2025 FLEURLIS · SUZHOU · EST. 2017",
-    "icp": "苏ICP备2025229492号-1"
+    "icp": "苏ICP备2025229492号-1",
+    "police": "苏公网安备32050802012558号",
+    "policeIconAlt": "Public security filing badge"
   },
   "hero": {
     "label": "// INTRODUCTION_THEATRE",

@@ -5,6 +5,7 @@ import { useRoute } from 'vue-router'
 
 import { setLocale } from '@/i18n'
 import logo from '@/assets/logo.svg'
+import policeFilingIcon from '@/assets/public-security-filing.png'
 
 const isNavCompacted = ref(false)
 const isMobileMenuOpen = ref(false)
@@ -298,6 +299,22 @@ const mobileNavItems = computed(() => [
                 <p class="site-footer__legal mt-2 tracking-[0.22em]">
                     <a href="https://beian.miit.gov.cn/" target="_blank" rel="noopener noreferrer" class="nav-link">
                         {{ t('footer.icp') }}
+                    </a>
+                </p>
+                <p class="site-footer__legal site-footer__filing mt-2">
+                    <a
+                        href="https://beian.mps.gov.cn/#/query/webSearch?code=32050802012558"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        class="site-footer__filing-link nav-link"
+                    >
+                        <img
+                            :src="policeFilingIcon"
+                            width="20"
+                            height="20"
+                            :alt="t('footer.policeIconAlt')"
+                        />
+                        <span>{{ t('footer.police') }}</span>
                     </a>
                 </p>
             </footer>

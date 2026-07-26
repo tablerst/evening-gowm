@@ -27,6 +27,8 @@ export const messages = {
             email: 'Email',
             legal: '© 2025 FLEURLIS · SUZHOU · EST. 2017',
             icp: '苏ICP备2025229492号-1',
+            police: '苏公网安备32050802012558号',
+            policeIconAlt: 'Public security filing badge',
         },
         hero: {
             label: '// INTRODUCTION_THEATRE',
@@ -191,6 +193,8 @@ SOURCE FACTORY · GLOBAL SUPPLY`,
             email: '邮箱',
             legal: '© 2025 FLEURLIS · 始于 2017 · 苏州',
             icp: '苏ICP备2025229492号-1',
+            police: '苏公网安备32050802012558号',
+            policeIconAlt: '公安备案图标',
         },
         hero: {
             label: '// INTRODUCTION_THEATRE',
