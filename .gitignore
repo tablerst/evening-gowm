@@ -14,3 +14,8 @@ misc/
 **/.env
 **/.env.*
 !**/.env.example
+
+# Runtime artifacts produced by the legacy daemon mode and systemd deploys
+/bin/
+/.backend-go-run.pid
+/.backend-go-run.log

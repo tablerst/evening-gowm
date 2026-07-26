@@ -1,0 +1,23 @@
+# Copy this file to /etc/systemd/system/evening-gown-backend.service.
+# The paths intentionally match the production workspace used by Nginx.
+
+[Unit]
+Description=Evening Gown backend
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/root/workspace/evening-gown/src/backend
+EnvironmentFile=/root/workspace/evening-gown/src/backend/.env
+Environment=GIN_MODE=release
+ExecStart=/root/workspace/evening-gown/bin/evening-gown
+Restart=on-failure
+RestartSec=3
+KillSignal=SIGINT
+TimeoutStopSec=15
+LimitNOFILE=65536
+
+[Install]
+WantedBy=multi-user.target
