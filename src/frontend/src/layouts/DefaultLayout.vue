@@ -288,13 +288,6 @@ const mobileNavItems = computed(() => [
                 <div class="site-footer__glow" aria-hidden="true"></div>
                 <p class="eyebrow">{{ t('footer.tagline') }}</p>
                 <h2 class="text-3xl md:text-5xl font-serif tracking-[0.3em] mt-4">{{ t('footer.brand') }}</h2>
-                <div class="site-footer__links mt-6">
-                    <a href="#" class="nav-link">{{ t('footer.instagram') }}</a>
-                    <span>•</span>
-                    <a href="#" class="nav-link">{{ t('footer.wechat') }}</a>
-                    <span>•</span>
-                    <a href="#" class="nav-link">{{ t('footer.email') }}</a>
-                </div>
                 <p class="site-footer__legal">{{ t('footer.legal') }}</p>
                 <p class="site-footer__legal mt-2 tracking-[0.22em]">
                     <a href="https://beian.miit.gov.cn/" target="_blank" rel="noopener noreferrer" class="nav-link">

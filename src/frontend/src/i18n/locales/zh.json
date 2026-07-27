@@ -27,6 +27,18 @@
     "police": "苏公网安备32050802012558号",
     "policeIconAlt": "公安备案图标"
   },
+  "contactModal": {
+    "eyebrow": "联系咨询",
+    "title": "联系我们",
+    "successTitle": "申请已收到",
+    "successBody": "感谢留下联系方式。请使用下方方式添加微信，我们会尽快跟进。",
+    "nicknameLabel": "微信昵称",
+    "nickname": "FLEURLIS-",
+    "placeholderAlt": "微信二维码临时占位图",
+    "placeholderNote": "二维码图片暂为占位",
+    "close": "关闭联系窗口",
+    "done": "完成"
+  },
   "hero": {
     "label": "// INTRODUCTION_THEATRE",
     "body": "始于 2008 · 顺河镇工厂\n深耕晚礼服定制与批发近二十载\n懂品质 · 懂市场 · 懂交付\n\n二十年匠心 · 守护每一道工序\n--------------------------------\n源头工厂 · 全球供应"
@@ -125,10 +137,10 @@
     "designerBody": "在午夜的几何中寻找秩序。我们相信，真正的奢华不是繁复的堆砌，而是对线条的极致克制。每一件礼服都是一座微型建筑，以身体为地基，用丝绸与光影构建出绝对的理性之美。我们剔除一切干扰，只为呈现最纯粹的结构张力。",
     "designerSign": "- 创意总监",
     "appointmentTitle": "联系我们",
-    "appointmentBody": "告诉我们你的需求（批发/定制/交付）。我们会尽快与您联系。",
+    "appointmentBody": "请填写必要信息，方便我们后续跟进。",
     "appointmentCta": "提交咨询",
     "contactForm": {
-      "name": "姓名",
+      "name": "称呼",
       "phone": "电话",
       "wechat": "微信",
       "message": "需求描述",
@@ -150,8 +162,8 @@
       "hqValue": "苏州",
       "clients": "客户",
       "clientsValue": "全球 B2B",
-      "capacity": "产能",
-      "capacityValue": "50,000/年"
+      "capacity": "日常松紧平衡产能",
+      "capacityValue": "36,800/年"
     }
   },
   "preview": {
