@@ -3,7 +3,6 @@ import { nextTick, onBeforeUnmount, ref, useId, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 
 import { HttpError, httpPost } from '@/api/http'
-import wechatQrPlaceholder from '@/assets/wechat-qr-placeholder.svg'
 
 const props = defineProps<{
   modelValue: boolean
@@ -300,7 +299,7 @@ onBeforeUnmount(() => {
                 class="mx-auto aspect-square w-full max-w-[16rem] border border-black/10 bg-[#f4f4f1] p-3"
               >
                 <img
-                  :src="wechatQrPlaceholder"
+                  src="/wechat-qr.webp"
                   :alt="t('contactModal.placeholderAlt')"
                   class="h-full w-full object-contain"
                 />
