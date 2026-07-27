@@ -3,6 +3,7 @@ import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 
 import ContactModal from '@/components/ContactModal.vue'
+import HuqiuStaticMap from '@/components/HuqiuStaticMap.vue'
 
 const { t } = useI18n()
 
@@ -78,46 +79,7 @@ const isContactModalOpen = ref(false)
         </div>
 
         <!-- GIS / Map -->
-        <div class="bg-white relative overflow-hidden group min-h-[300px]">
-            <!-- Grid Background -->
-            <div class="absolute inset-0 opacity-10"
-                style="background-image: linear-gradient(#000 1px, transparent 1px), linear-gradient(90deg, #000 1px, transparent 1px); background-size: 40px 40px;">
-            </div>
-
-            <!-- Radar/Sonar Effect -->
-            <div class="absolute inset-0 flex items-center justify-center">
-                <div class="w-64 h-64 border border-black/10 rounded-full animate-pulse"></div>
-                <div class="absolute w-48 h-48 border border-black/20 rounded-full"></div>
-                <div class="absolute w-2 h-2 bg-black rounded-full"></div>
-                <!-- Crosshair lines -->
-                <div class="absolute w-full h-[1px] bg-black/10"></div>
-                <div class="absolute h-full w-[1px] bg-black/10"></div>
-            </div>
-
-            <!-- Content Overlay -->
-            <div class="relative z-10 h-full p-8 md:p-12 flex flex-col justify-between pointer-events-none">
-                <div>
-                    <h3 class="font-display text-2xl mb-3 uppercase tracking-[0.15em] text-black font-bold">{{
-                        t('info.gisTitle') }}
-                    </h3>
-                    <div class="flex items-center gap-2">
-                        <div class="w-1.5 h-1.5 bg-brand rounded-none animate-pulse"></div>
-                        <p class="font-mono text-[10px] uppercase tracking-[0.2em] text-brand">{{ t('info.gisStatus') }}
-                        </p>
-                    </div>
-                </div>
-
-                <div class="font-mono text-xs">
-                    <div class="mb-2 text-black/50 uppercase tracking-widest">{{ t('info.gisLocation') }}</div>
-                    <div class="text-black tracking-[0.15em] font-bold text-sm">{{ t('info.gisCoordinates') }}</div>
-                </div>
-            </div>
-        </div>
-
-        <!-- <div class="bg-white relative overflow-hidden group min-h-[300px]">
-            <iframe width="800" height="460" frameborder='0' scrolling='no' marginheight='0' marginwidth='0'
-                src="https://surl.amap.com/4yX3MlhjTdBi"></iframe>
-        </div> -->
+        <HuqiuStaticMap />
     </section>
     <ContactModal v-model="isContactModalOpen" />
 </template>
