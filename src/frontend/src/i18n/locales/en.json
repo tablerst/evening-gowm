@@ -31,7 +31,7 @@
     "eyebrow": "CONTACT INQUIRY",
     "title": "Contact us",
     "successTitle": "Inquiry received",
-    "successBody": "Thank you for sharing your details. Use the contact method below and we will follow up shortly.",
+    "successBody": "Your inquiry has been received. Scan the QR code below to add us on WeChat, and we will be in touch shortly.",
     "nicknameLabel": "WECHAT NICKNAME",
     "nickname": "FLEURLIS-",
     "placeholderAlt": "Temporary WeChat QR code placeholder",
@@ -137,7 +137,7 @@
     "designerBody": "Finding order in midnight geometry. We believe true luxury is not about accumulation, but extreme restraint of lines. Each gown is a micro-architecture, built upon the body, constructing absolute rational beauty with silk and light. We strip away all noise to present the purest structural tension.",
     "designerSign": "- Chief Director",
     "appointmentTitle": "Contact",
-    "appointmentBody": "Share the essential details so we can follow up with you.",
+    "appointmentBody": "Submit your name, phone number, and requirements. A WeChat QR code will appear so we can continue the conversation.",
     "appointmentCta": "Send inquiry",
     "contactForm": {
       "name": "How should we address you",
@@ -173,7 +173,7 @@
       "hqValue": "SUZHOU",
       "clients": "CLIENTS",
       "clientsValue": "GLOBAL B2B",
-      "capacity": "BALANCED DAILY CAPACITY",
+      "capacity": "CAPACITY",
       "capacityValue": "36,800/YR"
     }
   },
